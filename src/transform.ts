@@ -15,56 +15,65 @@ export function transform($input: unknown): IAutoView.IAutoViewComponentProps {
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-    // Create an ImageAvatar component using thumbnail and name from the input data
-    const avatar: IAutoView.IAutoViewImageAvatarProps = {
-        type: "ImageAvatar",
-        src: input.thumbnail,
+    // Helper function: convert number age to string
+    function formatAge(age: number): string {
+        return age.toString();
+    }
+    
+    // Create a profile object mapping input fields with the necessary conversion for age
+    const profile = {
         name: input.name,
-        size: 40
+        age: formatAge(input.age),
+        email: input.email,
+        introduction: input.introduction,
+        thumbnail: input.thumbnail,
     };
-
-    // Create a Typography component for the member's name with variant "h4"
-    const nameTypography: IAutoView.IAutoViewTypographyProps = {
-        type: "Typography",
-        children: input.name,
-        variant: "h4"
-    };
-
-    // Create a Stats component to display the age, converting the number to a string
-    const ageStats: IAutoView.IAutoViewStatsProps = {
-        type: "Stats",
-        title: "Age",
-        value: String(input.age)
-    };
-
-    // Create a Typography component for the email with variant "body2" and gray color
-    const emailTypography: IAutoView.IAutoViewTypographyProps = {
-        type: "Typography",
-        children: input.email,
-        variant: "body2",
-        color: "gray"
-    };
-
-    // Create a Typography component for the introduction with variant "body1"
-    const introTypography: IAutoView.IAutoViewTypographyProps = {
-        type: "Typography",
-        children: input.introduction,
-        variant: "body1"
-    };
-
-    // Combine all components into a single vertical list (StackedList)
-    // This allows the overall output to be a single IAutoViewComponentProps
-    const stackedList: IAutoView.IAutoViewStackedListProps = {
+    
+    // Assemble the output using a StackedList to encapsulate multiple components
+    return {
         type: "StackedList",
-        gap: 8,  // Optional: gap between list items
         items: [
             {
-                // Group all components in a single stacked list item.
-                // This mirrors the layout of the React fragment in the component plan.
-                children: [avatar, nameTypography, ageStats, emailTypography, introTypography]
-            }
-        ]
+                children: [
+                    // Profile Header: Avatar Component
+                    {
+                        type: "ImageAvatar",
+                        src: profile.thumbnail,
+                        name: profile.name,
+                        size: 40,
+                    },
+                    // Profile Name displayed as header
+                    {
+                        type: "Typography",
+                        variant: "h5",
+                        children: profile.name,
+                    },
+                    // Supplementary Detail: Age displayed using Stats component
+                    {
+                        type: "Stats",
+                        title: "Age",
+                        value: profile.age,
+                    },
+                    // Display email using Chip component
+                    {
+                        type: "Chip",
+                        label: profile.email,
+                    },
+                    // Divider between header and introduction content
+                    {
+                        type: "Divider",
+                        orientation: "horizontal",
+                        variant: "solid",
+                        color: "#e0e0e0",
+                    },
+                    // Introduction displayed as paragraph
+                    {
+                        type: "Typography",
+                        variant: "body1",
+                        children: profile.introduction,
+                    },
+                ],
+            },
+        ],
     };
-
-    return stackedList;
 }
