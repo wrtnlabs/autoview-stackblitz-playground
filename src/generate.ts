@@ -1,14 +1,14 @@
 import { MainAgent } from "@autoview/agent";
 import fs from "fs";
 import OpenAI from "openai";
-import { exit } from "process";
 import typia from "typia";
 
-import env from "./env";
 import { YourSchema } from "./YourSchema";
+import env from "./env.js";
+import { assertApiKey } from "./internal/assertApiKey.js";
 
 const main = async (): Promise<void> => {
-  checkApiKey();
+  assertApiKey();
 
   const result: MainAgent.IResult = await MainAgent.execute(
     {
@@ -26,20 +26,4 @@ const main = async (): Promise<void> => {
     "utf8",
   );
 };
-
 main().catch(console.error);
-
-function checkApiKey(): void {
-  const apiKey = process.env.OPENAI_API_KEY;
-
-  if (!apiKey || apiKey === "YOUR_OPENAI_API_KEY") {
-    console.error("");
-    console.error("[========= API KEY ERROR =========]");
-    console.error("");
-    console.error("`OPENAI_API_KEY` is not set; please open the `src/env.ts` file and feed your own key");
-    console.error("");
-    console.error("[=================================]");
-    console.error("");
-    exit(-1);
-  }
-}
