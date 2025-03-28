@@ -23,7 +23,7 @@
     "@autoview/compiler": "^2.0.30",
     "@autoview/interface": "^2.0.30",
     "@autoview/ui": "^2.0.30",
-    "@samchon/openapi": "^3.2.1",
+    "@samchon/openapi": "^3.2.2",
     "dotenv": "^16.4.7",
     "openai": "^4.88.0",
     "react": "^18",
