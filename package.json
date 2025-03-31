@@ -19,16 +19,17 @@
   },
   "homepage": "https://github.com/wrtnlabs/autoview-stackblitz-playground",
   "dependencies": {
-    "@autoview/agent": "^3.0.1",
-    "@autoview/compiler": "^3.0.1",
-    "@autoview/interface": "^3.0.1",
-    "@autoview/ui": "^3.0.1",
+    "@autoview/agent": "^3.1.0",
+    "@autoview/compiler": "^3.1.0",
+    "@autoview/interface": "^3.1.0",
+    "@autoview/ui": "^3.1.0",
     "@samchon/openapi": "^3.2.3",
+    "@samchon/shopping-api": "^0.16.0",
     "dotenv": "^16.4.7",
     "openai": "^4.88.0",
     "react": "^18",
     "react-dom": "^18",
-    "typia": "^8.1.0"
+    "typia": "^8.1.1"
   },
   "devDependencies": {
     "@emotion/react": "^11.14.0",
