@@ -1,4 +1,4 @@
-import { MainAgent } from "@autoview/agent";
+import { AutoViewAgent, IAutoViewAgentProvider } from "@autoview/agent";
 import fs from "fs";
 import OpenAI from "openai";
 import typia from "typia";
@@ -10,15 +10,22 @@ import { assertApiKey } from "./internal/assertApiKey.js";
 const main = async (): Promise<void> => {
   assertApiKey();
 
-  const result: MainAgent.IResult = await MainAgent.execute(
+  const provider: IAutoViewAgentProvider = {
+    type: "chatgpt",
+    api: new OpenAI({
+      apiKey: typia.assert<string>(env.OPENAI_API_KEY),
+    }),
+    model: typia.assert<OpenAI.ChatModel>(env.OPENAI_MODEL),
+    isThinkingEnabled: false,
+  };
+
+  const schema = typia.llm.parameters<YourSchema, "chatgpt">();
+  const result: AutoViewAgent.IResult = await AutoViewAgent.execute(
+    provider,
+    provider,
     {
-      type: "chatgpt",
-      api: new OpenAI({
-        apiKey: typia.assert<string>(env.OPENAI_API_KEY),
-      }),
-      model: typia.assert<OpenAI.ChatModel>(env.OPENAI_MODEL),
+      parameters: schema,
     },
-    typia.llm.parameters<YourSchema, "chatgpt">(),
   );
   await fs.promises.writeFile(
     "src/transform.ts",
