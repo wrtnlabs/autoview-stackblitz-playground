@@ -36,16 +36,17 @@ export interface YourSchema {
    */
   thumbnail: string & tags.Format<"uri"> & tags.ContentMediaType<"image/*">;
 }
-
-/**
- * The value of the schema to display in the result.
- *
- * Set this to `undefined` if you wish to display random values for your convenience.
- */
-export const value: YourSchema | undefined = {
-  name: "John Doe",
-  age: 30,
-  email: "john.doe@example.com",
-  introduction: "Hello, world!",
-  thumbnail: "https://example.com/thumbnail.jpg",
-};
+export namespace YourSchema {
+  /**
+   * The value of the schema to display in the result.
+   *
+   * Set this to `undefined` if you wish to display random values for your convenience.
+   */
+  export const value: YourSchema | undefined = {
+    name: "John Doe",
+    age: 30,
+    email: "john.doe@example.com",
+    introduction: "Hello, world!",
+    thumbnail: "https://example.com/thumbnail.jpg",
+  };
+}
