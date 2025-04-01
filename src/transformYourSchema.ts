@@ -7,7 +7,7 @@ type IAutoViewTransformerInputType = {
     introduction: string;
     thumbnail: string & tags.Format<"uri"> & tags.ContentMediaType<"image/*">;
 };
-export function transform($input: unknown): IAutoView.IAutoViewComponentProps {
+export function transformYourSchema($input: unknown): IAutoView.IAutoViewComponentProps {
     typia.assertGuard<IAutoViewTransformerInputType>($input);
     return visualizeData($input);
 }
@@ -15,40 +15,52 @@ export function transform($input: unknown): IAutoView.IAutoViewComponentProps {
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-    // Build CardHeader component with member name, email, and thumbnail (as an avatar)
+    // Build the CardHeader component
     const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
         type: "CardHeader",
         title: input.name,
-        description: input.email,
+        // Use an Avatar component as the startElement
+        // This component displays the thumbnail along with the name
         startElement: {
             type: "Avatar",
             src: input.thumbnail,
-            name: input.name
+            name: input.name,
+            variant: "primary",
+            size: 40,
         }
     };
 
-    // Build CardContent component with introduction rendered as Markdown and age as a Text element
-    const markdownComponent: IAutoView.IAutoViewMarkdownProps = {
-        type: "Markdown",
-        content: input.introduction
-    };
-
-    const ageTextComponent: IAutoView.IAutoViewTextProps = {
-        type: "Text",
-        // Concatenate the label "Age:" with the age converted to string.
-        content: "Age: " + input.age.toString()
-    };
-
+    // Build the CardContent component with additional details
     const cardContent: IAutoView.IAutoViewCardContentProps = {
         type: "CardContent",
-        // Group the markdown and age text components into an array as childrenProps.
-        childrenProps: [markdownComponent, ageTextComponent]
+        childrenProps: [
+            // Text component for the age field
+            {
+                type: "Text",
+                variant: "subtitle1",
+                // Concatenate string with age converted to string
+                content: "Age: " + input.age.toString(),
+                color: "primary",
+            },
+            // Text component for the email field
+            {
+                type: "Text",
+                variant: "subtitle1",
+                content: "Email: " + input.email,
+                color: "secondary",
+            },
+            // Markdown component for the introduction field
+            {
+                type: "Markdown",
+                content: input.introduction,
+            }
+        ]
     };
 
-    // Combine header and content into a Vertical Card component.
+    // Combine the header and content in a VerticalCard component
     const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
         type: "VerticalCard",
-        childrenProps: [cardHeader, cardContent]
+        childrenProps: [cardHeader, cardContent],
     };
 
     return verticalCard;

@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { YourSchema } from "./YourSchema";
-import { transform as transformPage } from "./transformPage";
-import { transform as transformSale } from "./transformSale";
-import { transform as transformYourSchema } from "./transformYourSchema";
+import { transformPage } from "./transformPage";
+import { transformSale } from "./transformSale";
+import { transformYourSchema } from "./transformYourSchema";
 
 function AutoViewComponent() {
   useEffect(() => {
