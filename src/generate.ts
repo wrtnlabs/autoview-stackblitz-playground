@@ -1,4 +1,8 @@
-import { AutoViewAgent, IAutoViewAgentProvider } from "@autoview/agent";
+import {
+  AutoViewAgent,
+  IAutoViewResult,
+  IAutoViewVendor,
+} from "@autoview/agent";
 import {
   HttpLlm,
   IChatGptSchema,
@@ -14,9 +18,7 @@ import { YourSchema } from "./YourSchema";
 import env from "./env.js";
 import { assertApiKey } from "./internal/assertApiKey.js";
 
-const generateForTsType = async (
-  provider: IAutoViewAgentProvider,
-): Promise<void> => {
+const generateForTsType = async (vendor: IAutoViewVendor): Promise<void> => {
   // GENERATE SCHEMA
   const schema: IChatGptSchema.IParameters = typia.llm.parameters<
     YourSchema,
@@ -24,13 +26,14 @@ const generateForTsType = async (
   >();
 
   // GENERATE CODE
-  const result: AutoViewAgent.IResult = await AutoViewAgent.execute(
-    provider,
-    provider,
-    {
+  const agent = new AutoViewAgent({
+    vendor,
+    inputSchema: {
       parameters: schema,
     },
-  );
+    transformFunctionName: "transformYourSchema",
+  });
+  const result: IAutoViewResult = await agent.generate();
   await fs.promises.writeFile(
     "src/transformYourSchema.ts",
     result.transformTsCode,
@@ -38,9 +41,7 @@ const generateForTsType = async (
   );
 };
 
-const generateForSwagger = async (
-  provider: IAutoViewAgentProvider,
-): Promise<void> => {
+const generateForSwagger = async (vendor: IAutoViewVendor): Promise<void> => {
   // GET SWAGGER SCHEMA INFORMATION
   const document: OpenApi.IDocument = OpenApi.convert(
     await fetch("https://shopping-be.wrtn.ai/editor/swagger.json").then((r) =>
@@ -75,14 +76,16 @@ const generateForSwagger = async (
       page,
       sale,
     }).map(async ([key, func]) => {
-      const result: AutoViewAgent.IResult = await AutoViewAgent.execute(
-        provider,
-        provider,
-        {
+      const name: string = `transform${key[0].toUpperCase()}${key.slice(1)}`;
+      const agent: AutoViewAgent = new AutoViewAgent({
+        vendor,
+        inputSchema: {
           schema: func.output!,
           $defs: func.parameters.$defs,
         },
-      );
+        transformFunctionName: name,
+      });
+      const result: IAutoViewResult = await agent.generate();
       await fs.promises.writeFile(
         `src/transform${key[0].toUpperCase()}${key.slice(1)}.ts`,
         result.transformTsCode,
@@ -95,17 +98,12 @@ const generateForSwagger = async (
 const main = async (): Promise<void> => {
   assertApiKey();
 
-  const provider: IAutoViewAgentProvider = {
-    type: "chatgpt",
+  const vendor: IAutoViewVendor = {
     api: new OpenAI({
       apiKey: typia.assert<string>(env.OPENAI_API_KEY),
     }),
     model: typia.assert<OpenAI.ChatModel>(env.OPENAI_MODEL),
-    isThinkingEnabled: false,
   };
-  await Promise.all([
-    generateForTsType(provider),
-    generateForSwagger(provider),
-  ]);
+  await Promise.all([generateForTsType(vendor), generateForSwagger(vendor)]);
 };
 main().catch(console.error);

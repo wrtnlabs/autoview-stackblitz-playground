@@ -152,7 +152,7 @@ type IShoppingSaleUnitStockChoice = {
     candidate_id: string & tags.Format<"uuid">;
 };
 type IAutoViewTransformerInputType = IShoppingSale;
-export function transform($input: unknown): IAutoView.IAutoViewComponentProps {
+export function transformSale($input: unknown): IAutoView.IAutoViewComponentProps {
     typia.assertGuard<IAutoViewTransformerInputType>($input);
     return visualizeData($input);
 }
@@ -160,101 +160,168 @@ export function transform($input: unknown): IAutoView.IAutoViewComponentProps {
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-    // Create the header component using the sale content title and seller nickname.
-    const header: IAutoView.IAutoViewCardHeaderProps = {
-        type: "CardHeader",
-        title: input.content.title,
-        // Use seller.member.nickname for display in the header's start element.
-        startElement: {
-            // Use a text component from AutoView to show seller info.
-            type: "Text",
-            content: input.seller.member.nickname,
-            variant: "subtitle1"
+    // Helper to format ISO date strings into a local readable format.
+    const formatDate = (dateString: string): string => {
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        } catch (error) {
+            return dateString;
         }
     };
 
-    // Create the markdown component for rendering the content body.
-    const markdownComponent: IAutoView.IAutoViewMarkdownProps = {
-        type: "Markdown",
-        content: input.content.body
+    // Destructure and extract relevant fields from the input sale object
+    const {
+        id,
+        latest,
+        section,
+        seller,
+        content,
+        categories,
+        tags,
+        created_at
+    } = input;
+
+    // Create Card Header using IAutoViewCardHeaderProps
+    const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
+        type: "CardHeader",
+        title: content.title,
+        description: `Sale ID: ${id}${latest ? " - Latest" : ""}`,
+        // Construct a badge to highlight latest status.
+        startElement: {
+            type: "Badge",
+            // count is arbitrarily set to 1 when latest is true, else 0.
+            count: latest ? 1 : 0,
+            // Use "success" if latest, else "gray"
+            color: latest ? "success" : "gray",
+            // The badge wraps an icon, for simplicity using a check icon.
+            childrenProps: {
+                type: "Icon",
+                id: "check",
+                // default size
+                size: 16
+            }
+        }
     };
 
-    // Optionally, include the first thumbnail image if available.
-    const imageComponent: IAutoView.IAutoViewImageProps | undefined =
-        input.content.thumbnails && input.content.thumbnails.length > 0
-            ? {
-                  type: "Image",
-                  src: input.content.thumbnails[0].url,
-                  alt: input.content.title
-              }
-            : undefined;
+    // Build DataList Components for seller, section and created_at
+    const dataListItems: IAutoView.IAutoViewDataListItemProps[] = [
+        {
+            type: "DataListItem",
+            label: {
+                type: "Text",
+                content: "Seller",
+                // using default variant
+            },
+            value: {
+                type: "Text",
+                content: (seller && seller.member && seller.member.nickname) || ""
+            }
+        },
+        {
+            type: "DataListItem",
+            label: {
+                type: "Text",
+                content: "Section"
+            },
+            value: {
+                type: "Text",
+                content: section.name
+            }
+        },
+        {
+            type: "DataListItem",
+            label: {
+                type: "Text",
+                content: "Created At"
+            },
+            value: {
+                type: "Text",
+                content: formatDate(created_at)
+            }
+        }
+    ];
 
-    // Assemble the card content children; include markdown and image if available.
-    const contentChildren: IAutoView.IAutoViewPresentationComponentProps[] = [markdownComponent];
-    if (imageComponent) {
-        contentChildren.push(imageComponent);
-    }
-    const cardContent: IAutoView.IAutoViewCardContentProps = {
-        type: "CardContent",
-        childrenProps: contentChildren
-    };
-
-    // Map categories to chip components. Use the category name as label.
-    const categoryChips: IAutoView.IAutoViewChipProps[] = input.categories.map((category) => ({
+    // Map categories array to chips (color primary)
+    const categoryChips: IAutoView.IAutoViewChipProps[] = (categories || []).map(cat => ({
         type: "Chip",
-        label: category.name,
-        variant: "outlined"
+        label: cat.name,
+        color: "primary"
     }));
 
-    // Map tags to chip components.
-    const tagChips: IAutoView.IAutoViewChipProps[] = input.tags.map((tag) => ({
+    // Map tags array to chips (color secondary)
+    const tagChips: IAutoView.IAutoViewChipProps[] = (tags || []).map(tag => ({
         type: "Chip",
         label: tag,
-        variant: "outlined"
+        color: "secondary"
     }));
 
-    // Create chip groups for categories and tags if they exist.
-    const chipGroups: IAutoView.IAutoViewChipGroupProps[] = [];
+    // Build Card Content using IAutoViewCardContentProps
+    const cardContentChildren: IAutoView.IAutoViewPresentationComponentProps[] = [];
+
+    // Add markdown for content body
+    cardContentChildren.push({
+        type: "Markdown",
+        content: content.body
+    });
+
+    // If thumbnails are available, add the first as an image
+    if (content.thumbnails && content.thumbnails.length > 0) {
+        cardContentChildren.push({
+            type: "Image",
+            src: content.thumbnails[0].url,
+            alt: content.title
+        });
+    }
+
+    // Add DataList with seller, section and created_at
+    cardContentChildren.push({
+        type: "DataList",
+        childrenProps: dataListItems
+    });
+
+    // Add chip group for categories if any exists
     if (categoryChips.length > 0) {
-        chipGroups.push({
+        cardContentChildren.push({
             type: "ChipGroup",
             childrenProps: categoryChips
         });
     }
+
+    // Add chip group for tags if any exists
     if (tagChips.length > 0) {
-        chipGroups.push({
+        cardContentChildren.push({
             type: "ChipGroup",
             childrenProps: tagChips
         });
     }
 
-    // Create text components for displaying created and updated timestamps.
-    const createdText: IAutoView.IAutoViewTextProps = {
-        type: "Text",
-        content: `Created: ${input.created_at}`,
-        variant: "caption"
-    };
-    const updatedText: IAutoView.IAutoViewTextProps = {
-        type: "Text",
-        content: `Updated: ${input.updated_at}`,
-        variant: "caption"
+    const cardContent: IAutoView.IAutoViewCardContentProps = {
+        type: "CardContent",
+        childrenProps: cardContentChildren
     };
 
-    // Assemble footer children by concatenating chip groups and date texts.
-    const footerChildren: IAutoView.IAutoViewPresentationComponentProps[] = [
-        ...chipGroups,
-        createdText,
-        updatedText
-    ];
+    // Build Card Footer with a "View Details" button.
     const cardFooter: IAutoView.IAutoViewCardFooterProps = {
         type: "CardFooter",
-        childrenProps: footerChildren
+        childrenProps: [
+            {
+                type: "Button",
+                label: "View Details",
+                variant: "contained",
+                color: "primary"
+            }
+        ]
     };
 
-    // Assemble the overall vertical card with header, content, and footer.
+    // Compose the IAutoViewVerticalCardProps with header, content, footer as children
     const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
         type: "VerticalCard",
-        childrenProps: [header, cardContent, cardFooter]
+        childrenProps: [
+            cardHeader,
+            cardContent,
+            cardFooter
+        ]
     };
 
     return verticalCard;
