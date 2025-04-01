@@ -3,10 +3,11 @@ import { tags } from "typia";
 /**
  * Your schema to be displayed in the result.
  *
- * The `AutoView` automatically generates a React component which displays
- * the schema.
+ * The `AutoView` automatically generates a React component
+ * which displays the schema.
  *
- * Run `npm run generate` to generate the component after changing this to take effect.
+ * Run `npm run generate` to generate the component after
+ * changing this to take effect.
  */
 export interface YourSchema {
   /**
@@ -27,7 +28,8 @@ export interface YourSchema {
   /**
    * Introduction written by the member.
    *
-   * Its format is Markdown, and there is no restriction on the length.
+   * Its format is Markdown, and there is no restriction
+   * on the length.
    */
   introduction: string;
 
@@ -40,7 +42,8 @@ export namespace YourSchema {
   /**
    * The value of the schema to display in the result.
    *
-   * Set this to `undefined` if you wish to display random values for your convenience.
+   * Set this to `undefined` if you wish to display random values
+   * for your convenience.
    */
   export const value: YourSchema | undefined = {
     name: "John Doe",
