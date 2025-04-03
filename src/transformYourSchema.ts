@@ -1,66 +1,82 @@
-import typia, { tags } from "typia";
+import { tags } from "typia";
 import type * as IAutoView from "@autoview/interface";
 type IAutoViewTransformerInputType = {
+    /**
+     * Name of the member.
+     *
+     * @title Name of the member
+    */
     name: string;
+    /**
+     * Current age.
+     *
+     * @title Current age
+    */
     age: number & tags.Minimum<0> & tags.Maximum<100>;
+    /**
+     * Email address
+    */
     email: string & tags.Format<"email">;
+    /**
+     * Introduction written by the member.
+     *
+     * Its format is Markdown, and there is no restriction
+     * on the length.
+     *
+     * @title Introduction written by the member
+    */
     introduction: string;
+    /**
+     * Thumbnail picture of the member.
+     *
+     * @title Thumbnail picture of the member
+    */
     thumbnail: string & tags.Format<"uri"> & tags.ContentMediaType<"image/*">;
 };
-export function transformYourSchema($input: unknown): IAutoView.IAutoViewComponentProps {
-    typia.assertGuard<IAutoViewTransformerInputType>($input);
+export function transformYourSchema($input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
     return visualizeData($input);
 }
 
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-    // Build the CardHeader component
+    // Create the CardHeader component with the member's name, email, and thumbnail
     const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
         type: "CardHeader",
         title: input.name,
-        // Use an Avatar component as the startElement
-        // This component displays the thumbnail along with the name
+        description: input.email,
+        // Use an Avatar in the startElement to display the member's thumbnail
         startElement: {
             type: "Avatar",
             src: input.thumbnail,
-            name: input.name,
-            variant: "primary",
-            size: 40,
+            name: input.name
         }
     };
 
-    // Build the CardContent component with additional details
+    // Create the CardContent component with age and introduction details
     const cardContent: IAutoView.IAutoViewCardContentProps = {
         type: "CardContent",
         childrenProps: [
-            // Text component for the age field
             {
                 type: "Text",
-                variant: "subtitle1",
-                // Concatenate string with age converted to string
-                content: "Age: " + input.age.toString(),
-                color: "primary",
+                variant: "body1",
+                // Format the age as a text string.
+                content: "Age: " + input.age
             },
-            // Text component for the email field
-            {
-                type: "Text",
-                variant: "subtitle1",
-                content: "Email: " + input.email,
-                color: "secondary",
-            },
-            // Markdown component for the introduction field
             {
                 type: "Markdown",
-                content: input.introduction,
+                content: input.introduction
             }
         ]
     };
 
-    // Combine the header and content in a VerticalCard component
-    const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
+    // Construct the overall VerticalCard layout that includes the header and content components
+    const verticalCard: IAutoView.IAutoViewComponentProps = {
         type: "VerticalCard",
-        childrenProps: [cardHeader, cardContent],
+        childrenProps: [
+            cardHeader,
+            cardContent
+        ]
     };
 
     return verticalCard;
