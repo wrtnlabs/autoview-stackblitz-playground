@@ -32,6 +32,7 @@ const generateForTsType = async (vendor: IAutoViewVendor): Promise<void> => {
       parameters: schema,
     },
     transformFunctionName: "transformYourSchema",
+    experimentalAllInOne: true,
   });
   const result: IAutoViewResult = await agent.generate();
   await fs.promises.writeFile(
@@ -84,6 +85,7 @@ const generateForSwagger = async (vendor: IAutoViewVendor): Promise<void> => {
           $defs: func.parameters.$defs,
         },
         transformFunctionName: name,
+        experimentalAllInOne: true,
       });
       const result: IAutoViewResult = await agent.generate();
       await fs.promises.writeFile(
