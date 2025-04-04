@@ -571,96 +571,62 @@ export function transformPage($input: IAutoViewTransformerInputType): IAutoView.
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-    // Extract the sales data records from the input
-    const sales = input.data;
-
-    // Map each sale record into a VerticalCard
-    const verticalCards = sales.map(sale => {
-        // Create CardHeader component
-        const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
-            type: "CardHeader",
-            // Use seller's member.nickname as title, fallback to empty string if not available.
-            title: sale.seller.member.nickname || "",
-            // Use the section name as description.
-            description: sale.section.name || "",
-            // Create an Avatar using the first letter of the nickname
-            startElement: {
-                type: "Avatar",
-                // Use first character of nickname as name; fallback if empty.
-                name: sale.seller.member.nickname ? sale.seller.member.nickname.charAt(0) : "S"
-            }
-        };
-
-        // Create CardMedia component if a thumbnail exists
-        let cardMedia: IAutoView.IAutoViewCardMediaProps | undefined;
-        if (sale.content.thumbnails && sale.content.thumbnails.length > 0) {
-            // Use the first thumbnail's url
-            cardMedia = {
-                type: "CardMedia",
-                src: sale.content.thumbnails[0].url
-            };
-        }
-
-        // Create CardContent component using a Text element to display the sale title.
-        const textContent: IAutoView.IAutoViewTextProps = {
-            type: "Text",
-            // For simplicity, we embed the title string directly in content.
-            // The content field accepts either an array or string.
-            content: sale.content.title
-        };
-
-        const cardContent: IAutoView.IAutoViewCardContentProps = {
-            type: "CardContent",
-            childrenProps: textContent
-        };
-
-        // Create CardFooter component with price and date information
-        const priceText: IAutoView.IAutoViewTextProps = {
-            type: "Text",
-            // Format the price range; you can further format numbers if needed.
-            content: `Price: ${sale.price_range.lowest.real} - ${sale.price_range.highest.real}`
-        };
-
-        const dateText: IAutoView.IAutoViewTextProps = {
-            type: "Text",
-            content: `Created: ${sale.created_at}`
-        };
-
-        const cardFooter: IAutoView.IAutoViewCardFooterProps = {
-            type: "CardFooter",
-            // Combine the two text elements; childrenProps can be an array.
-            childrenProps: [priceText, dateText]
-        };
-
-        // Assemble the children components for the VerticalCard.
-        // Only push cardMedia if it was defined.
-        const children: (IAutoView.IAutoViewCardHeaderProps | IAutoView.IAutoViewCardMediaProps | IAutoView.IAutoViewCardContentProps | IAutoView.IAutoViewCardFooterProps)[] = [
-            cardHeader
-        ];
-        if (cardMedia) {
-            children.push(cardMedia);
-        }
-        children.push(cardContent, cardFooter);
-
-        // Return the vertical card with the composed children
-        const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
-            type: "VerticalCard",
-            childrenProps: children
-        };
-        return verticalCard;
+  // Here we assume the input is a paginated summary of sale records.
+  // We will compose a DataList view (IAutoViewDataListProps) that lists each sale.
+  // For each sale record, we build a DataListItem to show key information like title,
+  // seller nickname, and (if available) a thumbnail image.
+  
+  // Map each sale record to a DataListItem
+  const items: IAutoView.IAutoViewDataListItemProps[] = input.data.map((sale) => {
+    // Create an array of presentation components for the label.
+    const labelComponents: (IAutoView.IAutoViewPresentationComponentProps)[] = [];
+    // Use the sale content title as the main text
+    labelComponents.push({
+      type: "Text",
+      content: sale.content.title,
+      // Optionally, set a variant for the text if needed, defaulting here to body1
+      variant: "body1"
     });
-
-    // Create the Carousel component wrapping all VerticalCards.
-    const carousel: IAutoView.IAutoViewCarouselProps = {
-        type: "Carousel",
-        autoPlay: false,
-        infinite: false,
-        navControls: true,
-        indicators: true,
-        // Optional: you might set gutter or interval as needed.
-        childrenProps: verticalCards
+    // If there is a thumbnail image available, include it in the label components.
+    if (sale.content.thumbnails && sale.content.thumbnails.length > 0) {
+      const thumbnail = sale.content.thumbnails[0];
+      // Only add the image if its url is available
+      if (thumbnail.url) {
+        labelComponents.push({
+          type: "Image",
+          src: thumbnail.url,
+          // Use the file name (if available) as the alt text.
+          alt: thumbnail.name || "thumbnail"
+        });
+      }
+    }
+    
+    // Create a value component showing seller information.
+    // We will display the seller's member nickname.
+    const valueComponent: IAutoView.IAutoViewTextProps = {
+      type: "Text",
+      content: `Seller: ${sale.seller.member.nickname}`,
+      variant: "caption"
     };
 
-    // Return the carousel as the transformed output.
-    return carousel;
+    // Assemble the DataListItem
+    const dataListItem: IAutoView.IAutoViewDataListItemProps = {
+      type: "DataListItem",
+      // For label we provide an array of presentation components.
+      label: labelComponents,
+      // For value we simply provide a text component with seller detail.
+      value: valueComponent
+    };
+
+    return dataListItem;
+  });
+
+  // Compose the final data list component that wraps all sale items.
+  const dataList: IAutoView.IAutoViewDataListProps = {
+    type: "DataList",
+    childrenProps: items
+  };
+
+  // Return the composed IAutoView component props.
+  return dataList;
 }

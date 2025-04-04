@@ -1005,83 +1005,57 @@ export function transformSale($input: IAutoViewTransformerInputType): IAutoView.
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-    // Helper function to format date strings
-    const formatDate = (dateStr: string | null): string => {
-        if (!dateStr) return "N/A";
-        try {
-            const d = new Date(dateStr);
-            return d.toLocaleString();
-        } catch {
-            return dateStr; // Fallback to original if parsing fails
-        }
-    };
-
-    // Extract seller and section details
-    const sellerName = input.seller.member.nickname;
-    const sectionName = input.section.name;
-
-    // Build CardHeader component using IAutoView.CardHeaderProps
-    const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
-        type: "CardHeader",
-        title: `Sale in ${sectionName}`,
-        description: `Seller: ${sellerName}`,
-        startElement: {
-            type: "Avatar",
-            name: sellerName
-        }
-    };
-
-    // Build Markdown content for CardContent
-    const markdownContent: IAutoView.IAutoViewMarkdownProps = {
-        type: "Markdown",
-        content: `### ${input.content.title}\n\n${input.content.body}`
-    };
-    const cardContent: IAutoView.IAutoViewCardContentProps = {
-        type: "CardContent",
-        childrenProps: markdownContent
-    };
-
-    // Create array of Chip components for categories and tags
-    const chips: IAutoView.IAutoViewChipProps[] = [];
-    if (input.categories && input.categories.length > 0) {
-        for (const category of input.categories) {
-            chips.push({
-                type: "Chip",
-                label: category.name
-            });
-        }
+  // We transform the IShoppingSale input into a vertical card display component.
+  // The vertical card consists of three sub-components:
+  // 1. A card header displaying the sale title and seller information.
+  // 2. A card content displaying the main body of the sale content as markdown.
+  // 3. A card footer displaying metadata like creation time.
+  
+  // Build CardHeader component using sale content title and seller's member nickname.
+  const header: IAutoView.IAutoViewCardHeaderProps = {
+    type: "CardHeader",
+    title: input.content.title,
+    description: `Sale by ${input.seller.member.nickname}`,
+    // Use an Avatar for the seller. In a real scenario, the avatar source could be enhanced.
+    // Here we use the seller's nickname as fallback.
+    startElement: {
+      type: "Avatar",
+      name: input.seller.member.nickname,
+      // Pick a valid size from the allowed list; 40 is permitted.
+      size: 40,
+      // Using a default variant. In production, the variant could be determined by seller status.
+      variant: "primary",
+      // If there were a valid URI for the seller's avatar, it could be passed to 'src'.
     }
-    if (input.tags && input.tags.length > 0) {
-        for (const tag of input.tags) {
-            chips.push({
-                type: "Chip",
-                label: tag
-            });
-        }
+  };
+
+  // Build CardContent component. Here we render the sale content body using Markdown view.
+  const content: IAutoView.IAutoViewCardContentProps = {
+    type: "CardContent",
+    // We are wrapping the sale body inside a Markdown component.
+    childrenProps: {
+      type: "Markdown",
+      content: input.content.body,
     }
-    const chipGroup: IAutoView.IAutoViewChipGroupProps = {
-        type: "ChipGroup",
-        childrenProps: chips
-    };
+  };
 
-    // Create a Text component for timestamp information
-    const timeText: IAutoView.IAutoViewTextProps = {
-        type: "Text",
-        variant: "caption",
-        content: `Created: ${formatDate(input.created_at)} | Updated: ${formatDate(input.updated_at)}`
-    };
+  // Build CardFooter component displaying metadata such as creation time.
+  const footer: IAutoView.IAutoViewCardFooterProps = {
+    type: "CardFooter",
+    childrenProps: {
+      type: "Text",
+      // Content property of Text component (Arrayable type) can be provided as a simple string.
+      content: `Created at: ${input.created_at}`,
+      // Optionally, the variant or other styling properties could be set here.
+    }
+  };
 
-    // Build CardFooter component combining chip group and timestamp text
-    const cardFooter: IAutoView.IAutoViewCardFooterProps = {
-        type: "CardFooter",
-        childrenProps: [chipGroup, timeText]
-    };
+  // Compose the final vertical card. The VerticalCard component will group the header, content, and footer.
+  const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
+    type: "VerticalCard",
+    childrenProps: [header, content, footer],
+  };
 
-    // Compose the VerticalCard with header, content, and footer
-    const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
-        type: "VerticalCard",
-        childrenProps: [cardHeader, cardContent, cardFooter]
-    };
-
-    return verticalCard;
+  // Return the composed value.
+  return verticalCard;
 }

@@ -4,6 +4,7 @@ import { IPage } from "@samchon/shopping-api/lib/structures/common/IPage";
 import { IShoppingSale } from "@samchon/shopping-api/lib/structures/shoppings/sales/IShoppingSale";
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import typia from "typia";
 
 import { YourSchema } from "./YourSchema";
 import { transformPage } from "./transformPage";
@@ -60,16 +61,22 @@ function AutoViewComponent() {
       <Section title="From TypeScript Type">
         <hr />
         <div className="mt-8">
-          {renderComponent(transformYourSchema(YourSchema.value))}
+          {renderComponent(
+            transformYourSchema(YourSchema.value ?? typia.random<YourSchema>()),
+          )}
         </div>
       </Section>
       <Section title="PATCH /shoppings/customers/sales">
         <hr />
-        <div className="mt-8">{renderComponent(transformPage(page))}</div>
+        <div className="mt-8">
+          {renderComponent(transformPage(page as any))}
+        </div>
       </Section>
       <Section title="GET /shoppings/customers/sales/${id}">
         <hr />
-        <div className="mt-8">{renderComponent(transformSale(sale))}</div>
+        <div className="mt-8">
+          {renderComponent(transformSale(sale as any))}
+        </div>
       </Section>
     </>
   );
