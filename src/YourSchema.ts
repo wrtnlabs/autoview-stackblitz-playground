@@ -50,6 +50,6 @@ export namespace YourSchema {
     age: 30,
     email: "john.doe@example.com",
     introduction: "Hello, world!",
-    thumbnail: "https://example.com/thumbnail.jpg",
+    thumbnail: "https://avatars.githubusercontent.com/u/19178575?v=4",
   };
 }
