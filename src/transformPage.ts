@@ -571,58 +571,73 @@ export function transformPage($input: IAutoViewTransformerInputType): IAutoView.
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // In this example, we choose to render our page data using a DataList.
-  // For every sale record, we create a DataListItem in which the "label" shows the sale title,
-  // and the "value" is a summary text combining section name, seller nickname, and price range.
-  //
-  // The transformation logic:
-  // - Map over the input.data array (each item is an IShoppingSale.ISummary).
-  // - Create a IAutoViewDataListItemProps for every sale.
-  // - For label and value, we utilize IAutoViewTextProps to render string content.
-  // - We gracefully handle empty input.data by returning an empty list.
+  // We choose to display the sales summary data as a list.
+  // First, we create a list subheader displaying the pagination info.
+  // Then for each sale record, we map it to a ListItem component.
+  // For each sale, if a thumbnail exists we display it as an image in the startElement.
   
-  // Transform each sale record into a DataListItem component.
-  const dataListItems: IAutoView.IAutoViewDataListItemProps[] = input.data.map(sale => {
-    // Compose the label as the sale title from the content's title.
-    const labelComponent: IAutoView.IAutoViewTextProps = {
+  // Create a subheader that shows the current page and total pages.
+  const paginationSubheader: IAutoView.IAutoViewListSubheaderProps = {
+    stickToTop: true,
+    // The childrenProps accepts presentation components, so we include a Text component.
+    childrenProps: {
       type: "Text",
-      // The content property can be a string
-      content: sale.content.title,
-      // Optionally set a variant; defaulting to subtitle if needed.
+      // content can be a simple string.
+      content: `Page ${input.pagination.current} of ${input.pagination.pages}`,
       variant: "subtitle1",
-      // Using color "primary" for emphasis
-      color: "primary"
-    };
-    
-    // Compose the value with details such as section, seller, and price range.
-    // We take sale.section.name, sale.seller.member.nickname, and display nominal prices as a summary.
-    const priceRangeText = `Price Range: ${sale.price_range.lowest.nominal} - ${sale.price_range.highest.nominal}`;
-    const detailsText = `Section: ${sale.section.name} | Seller: ${sale.seller.member.nickname} | ${priceRangeText}`;
-    
-    const valueComponent: IAutoView.IAutoViewTextProps = {
-      type: "Text",
-      content: detailsText,
-      variant: "body2",
-      color: "secondary"
-    };
-    
-    // Compose and return a DataListItem from these text components.
-    const dataListItem: IAutoView.IAutoViewDataListItemProps = {
-      type: "DataListItem",
-      label: labelComponent,
-      value: valueComponent
-    };
-    return dataListItem;
-  });
-  
-  // Optionally, one could also add pagination information or additional components,
-  // but in this example, we restrict ourselves to displaying list of sales.
-  
-  // Create the DataList component that consumes the list of DataListItems.
-  const dataListComponent: IAutoView.IAutoViewComponentProps = {
-    type: "DataList",
-    childrenProps: dataListItems
+      color: "primary",
+    },
+    type: "ListSubheader"
   };
-  
-  return dataListComponent;
+
+  // Map each sale record into a ListItem.
+  const listItems: IAutoView.IAutoViewListItemProps[] = input.data.map((sale) => {
+    // Determine a possible start element: if a thumbnail exists in the sale content, display it as an image.
+    let startElement: IAutoView.IAutoViewImageProps | undefined = undefined;
+    if (
+      sale.content &&
+      sale.content.thumbnails &&
+      Array.isArray(sale.content.thumbnails) &&
+      sale.content.thumbnails.length > 0 &&
+      sale.content.thumbnails[0].url
+    ) {
+      startElement = {
+        type: "Image",
+        src: sale.content.thumbnails[0].url,
+        alt: sale.content.title || "Sale thumbnail"
+      };
+    }
+    
+    // Compose a description combining seller information and section details.
+    let descriptionParts: string[] = [];
+    if (sale.seller && sale.seller.member && sale.seller.member.nickname) {
+      descriptionParts.push(`Seller: ${sale.seller.member.nickname}`);
+    }
+    if (sale.section && sale.section.name) {
+      descriptionParts.push(`Section: ${sale.section.name}`);
+    }
+    // Also include price information if available.
+    if (sale.price_range && sale.price_range.lowest && typeof sale.price_range.lowest.real === "number") {
+      descriptionParts.push(`Price: $${sale.price_range.lowest.real}`);
+    }
+
+    return {
+      type: "ListItem",
+      title: sale.content && sale.content.title ? sale.content.title : "Untitled Sale",
+      description: descriptionParts.join(" | "),
+      // Optionally, if you want to redirect to a detailed sale view, you could use the sale id as part of the URL.
+      // For now, we leave href undefined to avoid hard-coded URIs.
+      startElement: startElement,
+    };
+  });
+
+  // Compose the final list with subheader and list items.
+  // IAutoView.ListProps accepts childrenProps as either a single object or an array.
+  // Here we use an array that combines the subheader and all list items.
+  const listComponent: IAutoView.IAutoViewListProps = {
+    type: "List",
+    childrenProps: [paginationSubheader, ...listItems]
+  };
+
+  return listComponent;
 }

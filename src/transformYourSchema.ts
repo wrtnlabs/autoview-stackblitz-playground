@@ -40,53 +40,52 @@ export function transformYourSchema($input: IAutoViewTransformerInputType): IAut
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // The purpose of this function is to transform member data (name, age, email, introduction, thumbnail)
-  // into a visual representation using the AutoView components.
-  //
-  // Our approach here is to display the member information within a vertical card.
-  // We compose a CardHeader to show the avatar image, the member's name, and a brief description.
-  // The CardContent then displays the introduction written in Markdown.
-  //
-  // Step 1: Create an Avatar component, which will be used in the CardHeader.
-  const avatar: IAutoView.IAutoViewAvatarProps = {
-    type: "Avatar",
-    src: input.thumbnail,
-    name: input.name,
-    // Set a default variant and size; sizes allowed are: 4,8,12,16,20,24,28,32,36,40,56,64,72.
-    variant: "primary",
-    size: 40,
-  };
-
-  // Step 2: Create a CardHeader component.
-  // Use the member's name as the title.
-  // Combine age and email into the description for additional context.
-  const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
+  // Build a CardHeader component to display the member's basic details.
+  // We include the member's name as the title and combine age and email into the description.
+  const header: IAutoView.IAutoViewCardHeaderProps = {
     type: "CardHeader",
     title: input.name,
-    description: `Age: ${input.age} | Email: ${input.email}`,
-    startElement: avatar,
+    description: `Age: ${input.age} - Email: ${input.email}`,
   };
 
-  // Step 3: Create a Markdown presentation component to display the introduction.
-  const markdownComponent: IAutoView.IAutoViewMarkdownProps = {
+  // Build a Markdown component to display the introduction.
+  // Since the introduction text is in Markdown format, we encapsulate it within a Markdown component.
+  const introductionMarkdown: IAutoView.IAutoViewMarkdownProps = {
     type: "Markdown",
     content: input.introduction,
   };
 
-  // Step 4: Create a CardContent component that holds the Markdown component.
-  const cardContent: IAutoView.IAutoViewCardContentProps = {
+  // Wrap the Markdown component in a CardContent component.
+  // The CardContent component's childrenProps accepts presentation components like Markdown.
+  const content: IAutoView.IAutoViewCardContentProps = {
     type: "CardContent",
-    // childrenProps accepts a single component or an array.
-    childrenProps: markdownComponent,
+    childrenProps: introductionMarkdown,
   };
 
-  // Step 5: Assemble the final visualization using a VerticalCard component.
-  // The VerticalCard childrenProps array includes the card header and card content.
+  // Optionally build a CardMedia component to display the thumbnail.
+  // We only include it if a thumbnail URL is provided.
+  let media: IAutoView.IAutoViewCardMediaProps | undefined = undefined;
+  if (input.thumbnail) {
+    media = {
+      type: "CardMedia",
+      src: input.thumbnail,
+    };
+  }
+
+  // Compose the VerticalCard by aggregating the header, media (if available), and content.
+  // The VerticalCard is one of the valid types for IAutoView.IAutoViewComponentProps.
+  // Arranging the components in an array makes the output structure easy to modify.
+  const childrenComponents: (IAutoView.IAutoViewCardHeaderProps | IAutoView.IAutoViewCardMediaProps | IAutoView.IAutoViewCardContentProps)[] = [header];
+  if (media) {
+    childrenComponents.push(media);
+  }
+  childrenComponents.push(content);
+
   const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
     type: "VerticalCard",
-    childrenProps: [cardHeader, cardContent],
+    childrenProps: childrenComponents,
   };
 
-  // Return the fully composed component view.
+  // Return the transformed data which now adheres to the IAutoView.IAutoViewComponentProps type.
   return verticalCard;
 }
