@@ -571,60 +571,56 @@ export function transformPage($input: IAutoViewTransformerInputType): IAutoView.
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // Destructure pagination and sales data from the input
-  const { pagination, data } = input;
+  // Transform the paginated shopping sale data into a list suitable for visualization.
+  // We will create a list component (IAutoView.ListProps) that includes:
+  // 1. A subheader displaying pagination information.
+  // 2. A list item for each sale record that shows key sale details.
+  
+  // Map each sale record to a ListItem:
+  const listItems: IAutoView.IAutoViewListItemProps[] = input.data.map(sale => {
+    // Extract seller nickname from nested seller/member structure.
+    const sellerNickname = sale.seller.member.nickname;
+    // Extract the real price values from the price range.
+    const lowPrice = sale.price_range.lowest.real;
+    const highPrice = sale.price_range.highest.real;
+    
+    // Compose a description string with seller and price range information.
+    const descriptionText = `Seller: ${sellerNickname} | Price Range: ${lowPrice} - ${highPrice}`;
 
-  // Transform each sale summary into a ListItem component prop.
-  // We use the sale's content title as the title and include seller information and creation time in the description.
-  const listItems: IAutoView.IAutoViewComponentProps[] = data.map((sale) => {
-    // Construct a title from the sale content
-    const title = sale.content.title;
-
-    // Construct a description that shows the seller's nickname and the sale creation date.
-    // You can extend this logic with more details if needed.
-    const description = `Seller: ${sale.seller.member.nickname} | Created at: ${sale.created_at}`;
-
-    // Use the sale id as the href for navigation.
-    // It is assumed that downstream logic or URL builders will convert this id into a proper URI.
-    const href = sale.id;
-
-    // Return a ListItem component prop. The type property discriminates this component as a ListItem.
+    // Use sale id to generate a link string (assuming a relative URL)
+    const hrefLink = `/sales/${sale.id}`;
+    
+    // Create and return a ListItem (IAutoView.ListItemProps) instance.
     return {
       type: "ListItem",
-      title,
-      description,
-      href,
-    } as IAutoView.IAutoViewComponentProps;
+      title: sale.content.title,
+      description: descriptionText,
+      href: hrefLink
+    };
   });
 
-  // Optionally, prepare a header for the list using the pagination info.
-  // This header uses a Text component (via IAutoView.TextProps) to display the current page information.
-  let header: IAutoView.IAutoViewComponentProps | undefined;
-  if (pagination) {
-    header = {
-      type: "ListSubheader",
-      // childrenProps here accepts an array of presentation components.
-      // We compose a simple Text component showing the page info.
-      childrenProps: [
-        {
-          type: "Text",
-          // Note: content accepts a string (or string array, or a mixture with icon props)
-          content: `Page ${pagination.current} of ${pagination.pages}`,
-          variant: "subtitle1",
-          // The color string here must be one of the defined options. "primary" is valid.
-          color: "primary",
-        },
-      ],
-    } as IAutoView.IAutoViewComponentProps;
-  }
+  // Create a subheader component to display pagination info.
+  // We use a Text component (IAutoView.TextProps) embedded in the childrenProps.
+  const subheader: IAutoView.IAutoViewListSubheaderProps = {
+    type: "ListSubheader",
+    stickToTop: true,
+    childrenProps: [
+      {
+        type: "Text",
+        // The content shows current page out of total pages.
+        // Note: The `content` property in IAutoView.TextProps is of a union type so using a simple string is acceptable.
+        content: `Page ${input.pagination.current} of ${input.pagination.pages}`,
+        variant: "subtitle1"
+      }
+    ]
+  };
 
-  // Compose the childrenProps array.
-  // If a header is available, include it at the top of the list; otherwise, just use the list items.
-  const childrenProps: IAutoView.IAutoViewComponentProps[] = header ? [header, ...listItems] : listItems;
-
-  // Finally, return a List component props object that aggregates all the transformed sale items.
-  return {
+  // Compose the final List (IAutoView.ListProps) with the subheader and the list items.
+  const list: IAutoView.IAutoViewListProps = {
     type: "List",
-    childrenProps,
-  } as IAutoView.IAutoViewComponentProps;
+    childrenProps: [subheader, ...listItems]
+  };
+
+  // Return the composed visualization component.
+  return list;
 }

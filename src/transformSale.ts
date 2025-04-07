@@ -559,6 +559,8 @@ type IShoppingSaleContent = {
     /**
      * The main body content.
      *
+     * Format follows the {@link format}, and default is `md` (markdown).
+     *
      * @title The main body content
     */
     body: string;
@@ -1005,43 +1007,63 @@ export function transformSale($input: IAutoViewTransformerInputType): IAutoView.
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // The goal is to aggregate sale data into a visualization component.
-  // Here we choose a card-based representation; we build a header and a content section
-  // and then wrap them in a vertical card.
+  // Transform the sale content into a vertical card layout.
+  // We use a vertical card that includes a header (title and seller info), an optional image/media,
+  // a content section (the main body rendered as markdown), and a footer (meta details).
   
-  // Build the header component to show summary info.
-  // It displays the sale's title and provides a description consisting of seller nickname and section name.
+  // Build the card header component using sale title and seller information.
   const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
     type: "CardHeader",
     title: input.content.title,
-    // Fallback description: combine seller's nickname and section name.
-    description: `Sale by ${input.seller.member.nickname} in section ${input.section.name}`
+    description: `Sold by: ${input.seller.member.nickname}` // Using seller's nickname for description.
   };
 
-  // Build a markdown component to display the sale's detailed body content.
-  // We assume that the backend marks the content format appropriately, regardless of the exact value.
-  const markdownComponent: IAutoView.IAutoViewMarkdownProps = {
-    type: "Markdown",
-    content: input.content.body
-  };
+  // Build the card media component if there is at least one thumbnail available.
+  // We assume that if thumbnails exist, the first thumbnail's URL is the one to display.
+  let cardMedia: IAutoView.IAutoViewCardMediaProps | undefined;
+  if (input.content.thumbnails && input.content.thumbnails.length > 0) {
+    cardMedia = {
+      type: "CardMedia",
+      src: input.content.thumbnails[0].url
+    };
+  }
 
-  // Embed the markdown component inside a card content component.
-  // The CardContent component can accept a presentation component (like our markdown component) as children.
+  // Build the card content component using a markdown viewer.
+  // The body of the sale content is rendered as markdown.
   const cardContent: IAutoView.IAutoViewCardContentProps = {
     type: "CardContent",
-    childrenProps: markdownComponent
+    // We nest a markdown component within the card content.
+    childrenProps: {
+      type: "Markdown",
+      content: input.content.body
+    }
   };
 
-  // Optionally, further processing can be done: for example, if you want to add additional
-  // details such as sale dates, tags, or even seller contact info. For now, we're composing two
-  // main parts: the header and the content.
-  
-  // Combine the header and content into a vertical card.
-  const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
+  // Build the card footer component which displays meta information like creation and update times.
+  // For simplicity, we compose a text component containing these details.
+  const footerText: string = `Created at: ${input.created_at}, Updated at: ${input.updated_at}`;
+  const cardFooter: IAutoView.IAutoViewCardFooterProps = {
+    type: "CardFooter",
+    childrenProps: {
+      type: "Text",
+      // The Text component accepts content as a string.
+      content: footerText
+    }
+  };
+
+  // Compose the vertical card children array.
+  // We include the header first, then media if available, followed by content and footer.
+  const childrenProps: (IAutoView.IAutoViewCardHeaderProps | IAutoView.IAutoViewCardMediaProps | IAutoView.IAutoViewCardContentProps | IAutoView.IAutoViewCardFooterProps)[] = [];
+  childrenProps.push(cardHeader);
+  if (cardMedia) {
+    childrenProps.push(cardMedia);
+  }
+  childrenProps.push(cardContent);
+  childrenProps.push(cardFooter);
+
+  // Return the composed vertical card component.
+  return {
     type: "VerticalCard",
-    childrenProps: [cardHeader, cardContent]
+    childrenProps: childrenProps
   };
-
-  // Return the composed visualization component.
-  return verticalCard;
 }

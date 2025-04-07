@@ -40,58 +40,54 @@ export function transformYourSchema($input: IAutoViewTransformerInputType): IAut
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // We are creating a vertical card to present the member information.
-  // The card is structured as follows:
-  // 1. CardHeader: Displays the member's name and age.
-  // 2. CardMedia: Shows the member's thumbnail image.
-  // 3. CardContent: Contains two parts:
-  //    a. A Markdown component showing the introduction.
-  //    b. A Text component displaying the email address.
-  //
-  // This transformation aggregates the input data into a cohesive, visual card format.
+  // We create a detailed "VerticalCard" layout to represent the member information.
+  // The card consists of: a header (showing the name and email with an avatar), a media area (showing the thumbnail),
+  // and content (displaying the introduction using markdown-friendly text).
   
-  // Create a CardHeader component displaying the member's name and age.
+  // Create a card header component.
   const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
     type: "CardHeader",
     title: input.name,
-    description: `Age: ${input.age}`, // additional info like age can be included here
+    description: input.email,
+    // Include an avatar in the startElement. We assume the input.thumbnail & name can be used.
+    startElement: {
+      type: "Avatar",
+      src: input.thumbnail,
+      name: input.name,
+      variant: "primary",
+      size: 56
+    }
   };
-
-  // Create a CardMedia component to display the member's thumbnail image.
+  
+  // Create a card media component using the thumbnail URI.
   const cardMedia: IAutoView.IAutoViewCardMediaProps = {
     type: "CardMedia",
-    src: input.thumbnail,
+    src: input.thumbnail
   };
-
-  // Create a Markdown component to display the introduction text.
-  const introductionMarkdown: IAutoView.IAutoViewMarkdownProps = {
-    type: "Markdown",
-    content: input.introduction,
-  };
-
-  // Create a Text component to display the member's email address.
-  // We use the Text variant "body1" for normal text display.
-  const emailText: IAutoView.IAutoViewTextProps = {
-    type: "Text",
-    variant: "body1",
-    content: input.email,
-    // Color could be optionally set here if needed:
-    // color: "primary",
-  };
-
-  // Combine the Markdown and Text component into the CardContent.
-  // The childrenProps field accepts either a single component or an array of presentation components.
+  
+  // Create a card content component that utilizes a text component to render the introduction.
   const cardContent: IAutoView.IAutoViewCardContentProps = {
     type: "CardContent",
-    childrenProps: [introductionMarkdown, emailText],
+    // The childrenProps here is a text component.
+    childrenProps: {
+      type: "Text",
+      // Use the introduction text provided.
+      content: input.introduction,
+      // Set a body style for the text.
+      variant: "body1",
+      color: "primary"
+    }
   };
-
-  // Compose the final VerticalCard component which holds all the defined child components.
+  
+  // Compose and return the final VerticalCard component with its children.
   const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
     type: "VerticalCard",
-    childrenProps: [cardHeader, cardMedia, cardContent],
+    childrenProps: [
+      cardHeader,
+      cardMedia,
+      cardContent
+    ]
   };
-
-  // Return the composed vertical card as the final visualization output.
+  
   return verticalCard;
 }
