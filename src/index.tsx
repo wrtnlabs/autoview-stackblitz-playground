@@ -68,15 +68,11 @@ function AutoViewComponent() {
       </Section>
       <Section title="PATCH /shoppings/customers/sales">
         <hr />
-        <div className="mt-8">
-          {renderComponent(transformPage(page as any))}
-        </div>
+        <div className="mt-8">{renderComponent(transformPage(page))}</div>
       </Section>
       <Section title="GET /shoppings/customers/sales/${id}">
         <hr />
-        <div className="mt-8">
-          {renderComponent(transformSale(sale as any))}
-        </div>
+        <div className="mt-8">{renderComponent(transformSale(sale))}</div>
       </Section>
     </>
   );

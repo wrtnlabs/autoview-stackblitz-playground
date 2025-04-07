@@ -704,7 +704,7 @@ type IShoppingSaleUnit = {
      *
      * @title List of options
     */
-    options: (IShoppingSaleUnitDescriptiveOption | IShoppingSaleUnitSelectableOption)[];
+    options: (IShoppingSaleUnitSelectableOption | IShoppingSaleUnitDescriptiveOption)[];
     /**
      * List of final stocks.
      *
@@ -744,38 +744,6 @@ type IShoppingSaleUnit = {
      * @title Whether the unit is required or not
     */
     required: boolean;
-};
-/**
- * Descriptive option.
- *
- * When type of the option not `"select"`, it means the option is descriptive
- * that requiring {@link IShoppingCustomer customers} to write some value to
- * {@link IShoppingOrder purchase}. Also, whatever customer writes about the
- * option, it does not affect the {@link IShoppingSaleUnitStock final stock}.
- *
- * Another words, the descriptive option is just for information transfer.
-*/
-type IShoppingSaleUnitDescriptiveOption = {
-    /**
-     * Primary Key.
-     *
-     * @title Primary Key
-    */
-    id: string & tags.Format<"uuid">;
-    /**
-     * Type of descriptive option.
-     *
-     * Which typed value should be written when purchasing.
-     *
-     * @title Type of descriptive option
-    */
-    type: "string" | "number" | "boolean";
-    /**
-     * Readable name of the option.
-     *
-     * @title Readable name of the option
-    */
-    name: string;
 };
 /**
  * Individual option information on units for sale.
@@ -864,6 +832,38 @@ type IShoppingSaleUnitOptionCandidate = {
      * Represents the name of the candidate value.
      *
      * @title Represents the name of the candidate value
+    */
+    name: string;
+};
+/**
+ * Descriptive option.
+ *
+ * When type of the option not `"select"`, it means the option is descriptive
+ * that requiring {@link IShoppingCustomer customers} to write some value to
+ * {@link IShoppingOrder purchase}. Also, whatever customer writes about the
+ * option, it does not affect the {@link IShoppingSaleUnitStock final stock}.
+ *
+ * Another words, the descriptive option is just for information transfer.
+*/
+type IShoppingSaleUnitDescriptiveOption = {
+    /**
+     * Primary Key.
+     *
+     * @title Primary Key
+    */
+    id: string & tags.Format<"uuid">;
+    /**
+     * Type of descriptive option.
+     *
+     * Which typed value should be written when purchasing.
+     *
+     * @title Type of descriptive option
+    */
+    type: "string" | "number" | "boolean";
+    /**
+     * Readable name of the option.
+     *
+     * @title Readable name of the option
     */
     name: string;
 };
@@ -961,13 +961,13 @@ type IShoppingSaleUnitStockInventory = {
      *
      * @title Total income quantity
     */
-    income: number & tags.Type<"int32">;
+    income: number & tags.Type<"uint32">;
     /**
      * Total outcome quantity.
      *
      * @title Total outcome quantity
     */
-    outcome: number & tags.Type<"int32">;
+    outcome: number & tags.Type<"uint32">;
 };
 /**
  * Selection information of final stock.
@@ -1004,62 +1004,44 @@ export function transformSale($input: IAutoViewTransformerInputType): IAutoView.
 
 
 
-// Here we transform the input sale data into a vertical card display using AutoView components.
-// We compose a card with a header (showing title and seller info), a media section (displaying a thumbnail image if available),
-// and a content section (displaying the sale description/body as text). This transformation is meant to provide a visual
-// representation of the sale details in the AutoView format.
-
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // Build a CardHeader to display the sale title and seller information.
-  // The header also includes an avatar representing the seller.
-  const header: IAutoView.IAutoViewCardHeaderProps = {
+  // The goal is to aggregate sale data into a visualization component.
+  // Here we choose a card-based representation; we build a header and a content section
+  // and then wrap them in a vertical card.
+  
+  // Build the header component to show summary info.
+  // It displays the sale's title and provides a description consisting of seller nickname and section name.
+  const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
     type: "CardHeader",
     title: input.content.title,
-    description: `Section: ${input.section.name} — Seller: ${input.seller.member.nickname}`,
-    // The startElement is used here to show the seller's avatar.
-    startElement: {
-      type: "Avatar",
-      name: input.seller.member.nickname,
-      // In a production scenario, the seller image URL might come from another field.
-      // Here we omit the src if no image is provided.
-      size: 32,
-      variant: "primary"
-    }
+    // Fallback description: combine seller's nickname and section name.
+    description: `Sale by ${input.seller.member.nickname} in section ${input.section.name}`
   };
 
-  // Build a CardMedia component to display the first thumbnail image if available.
-  // Use the first attached thumbnail (if any) from the sale content's thumbnails.
-  const media: IAutoView.IAutoViewCardMediaProps = {
-    type: "CardMedia",
-    src: (input.content.thumbnails && input.content.thumbnails.length > 0)
-      ? input.content.thumbnails[0].url
-      : undefined,
+  // Build a markdown component to display the sale's detailed body content.
+  // We assume that the backend marks the content format appropriately, regardless of the exact value.
+  const markdownComponent: IAutoView.IAutoViewMarkdownProps = {
+    type: "Markdown",
+    content: input.content.body
   };
 
-  // Build a Text component to display the body/content of the sale.
-  // This text will be wrapped in a CardContent component.
-  const textContent: IAutoView.IAutoViewTextProps = {
-    type: "Text",
-    content: input.content.body,
-    variant: "body1",
-    // Optionally, you can specify color or lineClamp if needed.
-  };
-
-  // Wrap the text content in a CardContent component.
+  // Embed the markdown component inside a card content component.
+  // The CardContent component can accept a presentation component (like our markdown component) as children.
   const cardContent: IAutoView.IAutoViewCardContentProps = {
     type: "CardContent",
-    childrenProps: textContent,
+    childrenProps: markdownComponent
   };
 
-  // Optionally, you can add a CardFooter component to display additional sale details (e.g., dates or price)
-  // if needed. For this example, we will keep the vertical card simple with header, media, and content.
-
-  // Compose the VerticalCard by aggregating the header, media, and content components.
+  // Optionally, further processing can be done: for example, if you want to add additional
+  // details such as sale dates, tags, or even seller contact info. For now, we're composing two
+  // main parts: the header and the content.
+  
+  // Combine the header and content into a vertical card.
   const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
     type: "VerticalCard",
-    childrenProps: [header, media, cardContent],
+    childrenProps: [cardHeader, cardContent]
   };
 
-  // Return the composed AutoView component prop structure.
+  // Return the composed visualization component.
   return verticalCard;
 }

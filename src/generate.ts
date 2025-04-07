@@ -45,9 +45,9 @@ const generateForTsType = async (vendor: IAutoViewVendor): Promise<void> => {
 const generateForSwagger = async (vendor: IAutoViewVendor): Promise<void> => {
   // GET SWAGGER SCHEMA INFORMATION
   const document: OpenApi.IDocument = OpenApi.convert(
-    await fetch("https://shopping-be.wrtn.ai/editor/swagger.json").then((r) =>
-      r.json(),
-    ),
+    await fetch(
+      "https://raw.githubusercontent.com/samchon/shopping-backend/refs/heads/master/packages/api/swagger.json",
+    ).then((r) => r.json()),
   );
 
   // CONVERT TO LLM FUNCTION CALLING SCHEMA
