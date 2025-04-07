@@ -571,62 +571,58 @@ export function transformPage($input: IAutoViewTransformerInputType): IAutoView.
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // Here we assume the input is a paginated summary of sale records.
-  // We will compose a DataList view (IAutoViewDataListProps) that lists each sale.
-  // For each sale record, we build a DataListItem to show key information like title,
-  // seller nickname, and (if available) a thumbnail image.
+  // In this example, we choose to render our page data using a DataList.
+  // For every sale record, we create a DataListItem in which the "label" shows the sale title,
+  // and the "value" is a summary text combining section name, seller nickname, and price range.
+  //
+  // The transformation logic:
+  // - Map over the input.data array (each item is an IShoppingSale.ISummary).
+  // - Create a IAutoViewDataListItemProps for every sale.
+  // - For label and value, we utilize IAutoViewTextProps to render string content.
+  // - We gracefully handle empty input.data by returning an empty list.
   
-  // Map each sale record to a DataListItem
-  const items: IAutoView.IAutoViewDataListItemProps[] = input.data.map((sale) => {
-    // Create an array of presentation components for the label.
-    const labelComponents: (IAutoView.IAutoViewPresentationComponentProps)[] = [];
-    // Use the sale content title as the main text
-    labelComponents.push({
+  // Transform each sale record into a DataListItem component.
+  const dataListItems: IAutoView.IAutoViewDataListItemProps[] = input.data.map(sale => {
+    // Compose the label as the sale title from the content's title.
+    const labelComponent: IAutoView.IAutoViewTextProps = {
       type: "Text",
+      // The content property can be a string
       content: sale.content.title,
-      // Optionally, set a variant for the text if needed, defaulting here to body1
-      variant: "body1"
-    });
-    // If there is a thumbnail image available, include it in the label components.
-    if (sale.content.thumbnails && sale.content.thumbnails.length > 0) {
-      const thumbnail = sale.content.thumbnails[0];
-      // Only add the image if its url is available
-      if (thumbnail.url) {
-        labelComponents.push({
-          type: "Image",
-          src: thumbnail.url,
-          // Use the file name (if available) as the alt text.
-          alt: thumbnail.name || "thumbnail"
-        });
-      }
-    }
+      // Optionally set a variant; defaulting to subtitle if needed.
+      variant: "subtitle1",
+      // Using color "primary" for emphasis
+      color: "primary"
+    };
     
-    // Create a value component showing seller information.
-    // We will display the seller's member nickname.
+    // Compose the value with details such as section, seller, and price range.
+    // We take sale.section.name, sale.seller.member.nickname, and display nominal prices as a summary.
+    const priceRangeText = `Price Range: ${sale.price_range.lowest.nominal} - ${sale.price_range.highest.nominal}`;
+    const detailsText = `Section: ${sale.section.name} | Seller: ${sale.seller.member.nickname} | ${priceRangeText}`;
+    
     const valueComponent: IAutoView.IAutoViewTextProps = {
       type: "Text",
-      content: `Seller: ${sale.seller.member.nickname}`,
-      variant: "caption"
+      content: detailsText,
+      variant: "body2",
+      color: "secondary"
     };
-
-    // Assemble the DataListItem
+    
+    // Compose and return a DataListItem from these text components.
     const dataListItem: IAutoView.IAutoViewDataListItemProps = {
       type: "DataListItem",
-      // For label we provide an array of presentation components.
-      label: labelComponents,
-      // For value we simply provide a text component with seller detail.
+      label: labelComponent,
       value: valueComponent
     };
-
     return dataListItem;
   });
-
-  // Compose the final data list component that wraps all sale items.
-  const dataList: IAutoView.IAutoViewDataListProps = {
+  
+  // Optionally, one could also add pagination information or additional components,
+  // but in this example, we restrict ourselves to displaying list of sales.
+  
+  // Create the DataList component that consumes the list of DataListItems.
+  const dataListComponent: IAutoView.IAutoViewComponentProps = {
     type: "DataList",
-    childrenProps: items
+    childrenProps: dataListItems
   };
-
-  // Return the composed IAutoView component props.
-  return dataList;
+  
+  return dataListComponent;
 }
