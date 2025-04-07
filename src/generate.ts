@@ -14,7 +14,7 @@ import fs from "fs";
 import OpenAI from "openai";
 import typia from "typia";
 
-import { YourSchema } from "./YourSchema";
+import { YourSchema } from "./YourSchema.js";
 import env from "./env.js";
 import { assertApiKey } from "./internal/assertApiKey.js";
 
