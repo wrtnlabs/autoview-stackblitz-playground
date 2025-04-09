@@ -9,17 +9,20 @@ updates:
     versioning-strategy: increase
     allow:
       - dependency-name: "@autoview/*"
+      - dependency-name: "@samchon/*"
+      - dependency-name: "openai"
       - dependency-name: "typia"
+      - dependency-name: "@ryoppippi/unplugin-typia"
       - dependency-name: "typescript"
       - dependency-name: "ts-patch"
     groups:
       AutoView:
         patterns:
           - "@autoview/*"
+          - "@samchon/*"
+          - "openai"
           - "typia"
-      NestJS:
-        patterns:
-          - "@nestjs/*"
+          - "@ryoppippi/unplugin-typia"
       TypeScript:
         patterns:
           - "typescript"
