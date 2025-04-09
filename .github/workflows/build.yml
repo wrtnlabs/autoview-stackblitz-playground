@@ -4,8 +4,6 @@ on:
     paths:
       - "src/**"
       - "package.json"
-      - "package-lock.json"
-
 jobs:
   build:
     runs-on: ubuntu-latest

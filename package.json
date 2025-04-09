@@ -6,7 +6,8 @@
   "scripts": {
     "generate": "tsc -p tsconfig.generate.json && node lib/generate.js",
     "prepare": "ts-patch install",
-    "start": "vite"
+    "start": "vite",
+    "build": "vite build"
   },
   "repository": {
     "type": "git",
