@@ -5,7 +5,6 @@ import {
 } from "@autoview/agent";
 import {
   HttpLlm,
-  IChatGptSchema,
   IHttpLlmApplication,
   IHttpLlmFunction,
   OpenApi,
@@ -19,17 +18,11 @@ import env from "./env.js";
 import { assertApiKey } from "./internal/assertApiKey.js";
 
 const generateForTsType = async (vendor: IAutoViewVendor): Promise<void> => {
-  // GENERATE SCHEMA
-  const schema: IChatGptSchema.IParameters = typia.llm.parameters<
-    YourSchema,
-    "chatgpt"
-  >();
-
-  // GENERATE CODE
   const agent = new AutoViewAgent({
     vendor,
-    inputSchema: {
-      parameters: schema,
+    input: {
+      type: "json-schema",
+      unit: typia.json.schema<YourSchema>(),
     },
     transformFunctionName: "transformYourSchema",
     experimentalAllInOne: true,
@@ -80,7 +73,9 @@ const generateForSwagger = async (vendor: IAutoViewVendor): Promise<void> => {
       const name: string = `transform${key[0].toUpperCase()}${key.slice(1)}`;
       const agent: AutoViewAgent = new AutoViewAgent({
         vendor,
-        inputSchema: {
+        input: {
+          type: "llm-schema",
+          model: "chatgpt",
           schema: func.output!,
           $defs: func.parameters.$defs,
         },
