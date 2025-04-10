@@ -571,87 +571,95 @@ export function transformPage($input: IAutoViewTransformerInputType): IAutoView.
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // Check if there is any sale data. If not, return a simple Text component indicating no sales exist.
-  if (!input.data || input.data.length === 0) {
-    return {
-      type: "Text",
-      variant: "body1",
-      color: "gray",
-      // Using markdown content here to improve text formatting on all devices.
-      content: "### No Sales Available\n\nThere are currently no sales to display.",
-    } as IAutoView.IAutoViewTextProps;
-  }
-
-  // For each sale summary in the input data, build a VerticalCard to display the sale.
-  // A VerticalCard is composed of a header, media and content.
-  const saleCards: IAutoView.IAutoViewVerticalCardProps[] = input.data.map(sale => {
-    // Build the header with an icon as the starting element. The header displays the sale title
-    // and seller member nickname.
+  // We create a carousel component that will display each sale as a vertical card.
+  // Each card will include a header, optionally an image (if a thumbnail is present),
+  // markdown content for seller and price info, and a footer with creation time.
+  // This makes the UI engaging with visual elements (icons, images, markdown) for better mobile responsiveness.
+  
+  // Transform individual sale records into vertical cards.
+  const verticalCards = input.data.map((sale) => {
+    // Card header: display the sale title and section name.
     const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
       type: "CardHeader",
       title: sale.content.title,
-      description: `Sale by ${sale.seller.member.nickname}`,
+      description: `Section: ${sale.section.name}`,
+      // Use an icon to visually represent the sale (e.g. a 'tag' icon).
       startElement: {
         type: "Icon",
-        id: "shopping-cart", // using a common shopping icon in kebab-case
-        color: "blue",
-        size: 24,
-      } as IAutoView.IAutoViewIconProps,
+        id: "tag",
+        size: 16,
+        color: "blue"
+      },
+      // An end icon to indicate time information.
+      endElement: {
+        type: "Icon",
+        id: "clock",
+        size: 16,
+        color: "gray"
+      }
     };
 
-    // Build the card media using the first thumbnail if available.
-    const cardMedia: IAutoView.IAutoViewCardMediaProps = {
-      type: "CardMedia",
-      // Only set src if there is at least one thumbnail; otherwise left undefined.
-      src: (sale.content.thumbnails && sale.content.thumbnails.length > 0)
-        ? sale.content.thumbnails[0].url
-        : undefined,
-    };
+    // Card media: if there is at least one thumbnail image, display it.
+    // Otherwise, skip the media component.
+    let cardMedia: IAutoView.IAutoViewCardMediaProps | undefined = undefined;
+    if (sale.content.thumbnails && sale.content.thumbnails.length > 0) {
+      cardMedia = {
+        type: "CardMedia",
+        src: sale.content.thumbnails[0].url
+      };
+    }
 
-    // Create markdown content with sale details.
-    const markdownContent = `
-**Sale ID:** ${sale.id}
-
-**Price Range:**
-- Lowest (Real): $${sale.price_range.lowest.real} (Nominal: $${sale.price_range.lowest.nominal})
-- Highest (Real): $${sale.price_range.highest.real} (Nominal: $${sale.price_range.highest.nominal})
-
-**Created At:** ${sale.created_at}
-`;
-
-    // Build the card content which uses a Markdown component to present the details.
+    // Card content: display details about the seller and price range using markdown.
     const cardContent: IAutoView.IAutoViewCardContentProps = {
       type: "CardContent",
-      // The childrenProps property here accepts a layout of presentation components.
-      // We use a Markdown component for a more friendly rendering.
       childrenProps: {
         type: "Markdown",
-        content: markdownContent,
-      } as IAutoView.IAutoViewMarkdownProps,
+        content: `**Seller:** ${sale.seller.member.nickname}\n\n**Price Range:** Nominal: ${sale.price_range.lowest.nominal} / Real: ${sale.price_range.lowest.real}`
+      }
     };
 
-    // Compose the vertical card for each sale.
+    // Card footer: display creation time using markdown.
+    const cardFooter: IAutoView.IAutoViewCardFooterProps = {
+      type: "CardFooter",
+      childrenProps: {
+        type: "Markdown",
+        content: `Created at: ${sale.created_at}`
+      }
+    };
+
+    // Compose the vertical card using the allowed child components.
+    // Filter out any undefined components (for example, if cardMedia is not available).
+    const childrenComponents: (IAutoView.IAutoViewCardHeaderProps | IAutoView.IAutoViewCardMediaProps | IAutoView.IAutoViewCardContentProps | IAutoView.IAutoViewCardFooterProps)[] = 
+      [cardHeader, cardMedia, cardContent, cardFooter].filter((comp): comp is Exclude<typeof comp, undefined> => comp !== undefined);
+
     return {
       type: "VerticalCard",
-      // The children are the card header, media and content.
-      childrenProps: [cardHeader, cardMedia, cardContent],
+      childrenProps: childrenComponents
     } as IAutoView.IAutoViewVerticalCardProps;
   });
 
-  // To allow horizontal swiping and make a more visually appealing experience on mobile,
-  // we wrap all sale cards inside a Carousel component.
+  // If there are no sale records, we return a simple markdown component to notify the user. 
+  // This fallback still uses visual markdown rather than plain text.
+  if (verticalCards.length === 0) {
+    return {
+      type: "Markdown",
+      content: "### No sales available.\nPlease check back later."
+    } as IAutoView.IAutoViewMarkdownProps;
+  }
+
+  // Compose the final carousel component according to the extra instruction "use carousel layout for each item".
   const carousel: IAutoView.IAutoViewCarouselProps = {
     type: "Carousel",
-    autoPlay: false,       // Disable auto play to let users manually swipe between sales
-    interval: 5000,        // Interval is defined though autoPlay is false (for potential future use)
-    infinite: false,       // Not looping continuously by default
-    gutter: 8,             // A small gutter for spacing between items
-    effect: "slide",       // Use slide effect for a smooth transition
-    indicators: true,      // Show indicators to denote the number of items
-    navControls: true,     // Enable navigation controls for accessibility purposes
-    childrenProps: saleCards, // Insert the vertical cards as children of the carousel
+    autoPlay: true,
+    interval: 30, // Recommended value (between 20 and 60)
+    infinite: true,
+    gutter: 10,
+    effect: "slide",
+    navControls: true,
+    indicators: true,
+    // Place the vertical cards into the carousel.
+    childrenProps: verticalCards
   };
 
-  // Finally, return the composed carousel which is of type IAutoView.IAutoViewComponentProps.
   return carousel;
 }

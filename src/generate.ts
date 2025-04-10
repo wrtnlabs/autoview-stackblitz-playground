@@ -79,6 +79,8 @@ const generateForSwagger = async (vendor: IAutoViewVendor): Promise<void> => {
           schema: func.output!,
           $defs: func.parameters.$defs,
         },
+        instruction:
+          key === "page" ? "use carousel layout for each item" : undefined,
         transformFunctionName: name,
         experimentalAllInOne: true,
       });
