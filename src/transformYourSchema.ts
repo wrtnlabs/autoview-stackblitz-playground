@@ -1,6 +1,15 @@
 import { tags } from "typia";
 import type * as IAutoView from "@autoview/interface";
-type IAutoViewTransformerInputType = {
+/**
+ * Your schema to be displayed in the result.
+ *
+ * The `AutoView` automatically generates a React component
+ * which displays the schema.
+ *
+ * Run `npm run generate` to generate the component after
+ * changing this to take effect.
+*/
+type YourSchema = {
     /**
      * Name of the member.
      *
@@ -33,6 +42,7 @@ type IAutoViewTransformerInputType = {
     */
     thumbnail: string & tags.Format<"uri"> & tags.ContentMediaType<"image/*">;
 };
+type IAutoViewTransformerInputType = YourSchema;
 export function transformYourSchema($input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
     return visualizeData($input);
 }
@@ -40,54 +50,60 @@ export function transformYourSchema($input: IAutoViewTransformerInputType): IAut
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // We create a detailed "VerticalCard" layout to represent the member information.
-  // The card consists of: a header (showing the name and email with an avatar), a media area (showing the thumbnail),
-  // and content (displaying the introduction using markdown-friendly text).
-  
-  // Create a card header component.
+  // Construct the CardHeader component using the user's name, email, and thumbnail.
+  // Note: The startElement property only accepts specific component types, so we use the Avatar component.
   const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
     type: "CardHeader",
+    // Display the user's name prominently.
     title: input.name,
+    // Use the email as a subtitle/description.
     description: input.email,
-    // Include an avatar in the startElement. We assume the input.thumbnail & name can be used.
+    // Use the user's thumbnail in an Avatar component for a visual identifier.
     startElement: {
       type: "Avatar",
       src: input.thumbnail,
       name: input.name,
+      // Using a standard avatar size; this can be adjusted based on design needs.
+      size: 56,
+      // Choosing a default variant. In a production scenario, you might derive this from user data.
       variant: "primary",
-      size: 56
-    }
+    },
   };
-  
-  // Create a card media component using the thumbnail URI.
-  const cardMedia: IAutoView.IAutoViewCardMediaProps = {
-    type: "CardMedia",
-    src: input.thumbnail
-  };
-  
-  // Create a card content component that utilizes a text component to render the introduction.
+
+  // Construct the CardContent component to display the introduction.
+  // We use the Markdown component to render the introduction text as formatted content.
   const cardContent: IAutoView.IAutoViewCardContentProps = {
     type: "CardContent",
-    // The childrenProps here is a text component.
+    // Using a Markdown component for text representation so that the introduction is more engaging.
+    childrenProps: {
+      type: "Markdown",
+      content: input.introduction,
+    },
+  };
+
+  // Construct the CardFooter component to display additional details such as age.
+  // We use a Text component as the footer because it allows enhanced styling options.
+  const cardFooter: IAutoView.IAutoViewCardFooterProps = {
+    type: "CardFooter",
     childrenProps: {
       type: "Text",
-      // Use the introduction text provided.
-      content: input.introduction,
-      // Set a body style for the text.
-      variant: "body1",
-      color: "primary"
-    }
+      // Display the age in a clear, descriptive manner.
+      content: `Age: ${input.age}`,
+      // Utilize a caption variant to keep the information unobtrusive.
+      variant: "caption",
+      // Choose a color that complements the header and content typography.
+      color: "secondary",
+    },
   };
-  
-  // Compose and return the final VerticalCard component with its children.
+
+  // Wrap all the components in a VerticalCard to create a responsive card layout.
+  // VerticalCard's childrenProps accepts an array of presentation components.
   const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
     type: "VerticalCard",
-    childrenProps: [
-      cardHeader,
-      cardMedia,
-      cardContent
-    ]
+    childrenProps: [cardHeader, cardContent, cardFooter],
   };
-  
+
+  // Return the composed value which is of type IAutoView.IAutoViewComponentProps
+  // This design leverages visual elements (avatar, markdown, typography) to engage end users.
   return verticalCard;
 }

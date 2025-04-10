@@ -571,56 +571,87 @@ export function transformPage($input: IAutoViewTransformerInputType): IAutoView.
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // Transform the paginated shopping sale data into a list suitable for visualization.
-  // We will create a list component (IAutoView.ListProps) that includes:
-  // 1. A subheader displaying pagination information.
-  // 2. A list item for each sale record that shows key sale details.
-  
-  // Map each sale record to a ListItem:
-  const listItems: IAutoView.IAutoViewListItemProps[] = input.data.map(sale => {
-    // Extract seller nickname from nested seller/member structure.
-    const sellerNickname = sale.seller.member.nickname;
-    // Extract the real price values from the price range.
-    const lowPrice = sale.price_range.lowest.real;
-    const highPrice = sale.price_range.highest.real;
-    
-    // Compose a description string with seller and price range information.
-    const descriptionText = `Seller: ${sellerNickname} | Price Range: ${lowPrice} - ${highPrice}`;
-
-    // Use sale id to generate a link string (assuming a relative URL)
-    const hrefLink = `/sales/${sale.id}`;
-    
-    // Create and return a ListItem (IAutoView.ListItemProps) instance.
+  // Check if there is any sale data. If not, return a simple Text component indicating no sales exist.
+  if (!input.data || input.data.length === 0) {
     return {
-      type: "ListItem",
+      type: "Text",
+      variant: "body1",
+      color: "gray",
+      // Using markdown content here to improve text formatting on all devices.
+      content: "### No Sales Available\n\nThere are currently no sales to display.",
+    } as IAutoView.IAutoViewTextProps;
+  }
+
+  // For each sale summary in the input data, build a VerticalCard to display the sale.
+  // A VerticalCard is composed of a header, media and content.
+  const saleCards: IAutoView.IAutoViewVerticalCardProps[] = input.data.map(sale => {
+    // Build the header with an icon as the starting element. The header displays the sale title
+    // and seller member nickname.
+    const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
+      type: "CardHeader",
       title: sale.content.title,
-      description: descriptionText,
-      href: hrefLink
+      description: `Sale by ${sale.seller.member.nickname}`,
+      startElement: {
+        type: "Icon",
+        id: "shopping-cart", // using a common shopping icon in kebab-case
+        color: "blue",
+        size: 24,
+      } as IAutoView.IAutoViewIconProps,
     };
+
+    // Build the card media using the first thumbnail if available.
+    const cardMedia: IAutoView.IAutoViewCardMediaProps = {
+      type: "CardMedia",
+      // Only set src if there is at least one thumbnail; otherwise left undefined.
+      src: (sale.content.thumbnails && sale.content.thumbnails.length > 0)
+        ? sale.content.thumbnails[0].url
+        : undefined,
+    };
+
+    // Create markdown content with sale details.
+    const markdownContent = `
+**Sale ID:** ${sale.id}
+
+**Price Range:**
+- Lowest (Real): $${sale.price_range.lowest.real} (Nominal: $${sale.price_range.lowest.nominal})
+- Highest (Real): $${sale.price_range.highest.real} (Nominal: $${sale.price_range.highest.nominal})
+
+**Created At:** ${sale.created_at}
+`;
+
+    // Build the card content which uses a Markdown component to present the details.
+    const cardContent: IAutoView.IAutoViewCardContentProps = {
+      type: "CardContent",
+      // The childrenProps property here accepts a layout of presentation components.
+      // We use a Markdown component for a more friendly rendering.
+      childrenProps: {
+        type: "Markdown",
+        content: markdownContent,
+      } as IAutoView.IAutoViewMarkdownProps,
+    };
+
+    // Compose the vertical card for each sale.
+    return {
+      type: "VerticalCard",
+      // The children are the card header, media and content.
+      childrenProps: [cardHeader, cardMedia, cardContent],
+    } as IAutoView.IAutoViewVerticalCardProps;
   });
 
-  // Create a subheader component to display pagination info.
-  // We use a Text component (IAutoView.TextProps) embedded in the childrenProps.
-  const subheader: IAutoView.IAutoViewListSubheaderProps = {
-    type: "ListSubheader",
-    stickToTop: true,
-    childrenProps: [
-      {
-        type: "Text",
-        // The content shows current page out of total pages.
-        // Note: The `content` property in IAutoView.TextProps is of a union type so using a simple string is acceptable.
-        content: `Page ${input.pagination.current} of ${input.pagination.pages}`,
-        variant: "subtitle1"
-      }
-    ]
+  // To allow horizontal swiping and make a more visually appealing experience on mobile,
+  // we wrap all sale cards inside a Carousel component.
+  const carousel: IAutoView.IAutoViewCarouselProps = {
+    type: "Carousel",
+    autoPlay: false,       // Disable auto play to let users manually swipe between sales
+    interval: 5000,        // Interval is defined though autoPlay is false (for potential future use)
+    infinite: false,       // Not looping continuously by default
+    gutter: 8,             // A small gutter for spacing between items
+    effect: "slide",       // Use slide effect for a smooth transition
+    indicators: true,      // Show indicators to denote the number of items
+    navControls: true,     // Enable navigation controls for accessibility purposes
+    childrenProps: saleCards, // Insert the vertical cards as children of the carousel
   };
 
-  // Compose the final List (IAutoView.ListProps) with the subheader and the list items.
-  const list: IAutoView.IAutoViewListProps = {
-    type: "List",
-    childrenProps: [subheader, ...listItems]
-  };
-
-  // Return the composed visualization component.
-  return list;
+  // Finally, return the composed carousel which is of type IAutoView.IAutoViewComponentProps.
+  return carousel;
 }
