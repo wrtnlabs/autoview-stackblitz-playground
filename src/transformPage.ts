@@ -571,94 +571,92 @@ export function transformPage($input: IAutoViewTransformerInputType): IAutoView.
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // We create a carousel component that will display each sale as a vertical card.
-  // Each card will include a header, optionally an image (if a thumbnail is present),
-  // markdown content for seller and price info, and a footer with creation time.
-  // This makes the UI engaging with visual elements (icons, images, markdown) for better mobile responsiveness.
-  
-  // Transform individual sale records into vertical cards.
-  const verticalCards = input.data.map((sale) => {
-    // Card header: display the sale title and section name.
+  // If there is no data, return a simple Markdown component informing the user.
+  if (!input.data || input.data.length === 0) {
+    return {
+      type: "Markdown",
+      content: "### No Sales Available\nThere are currently no sales to display. Please check back later."
+    };
+  }
+
+  // Map each sale summary record to a vertical card component.
+  const cards: IAutoView.IAutoViewVerticalCardProps[] = input.data.map((sale) => {
+    // Build a card header to display the sale title.
     const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
       type: "CardHeader",
       title: sale.content.title,
-      description: `Section: ${sale.section.name}`,
-      // Use an icon to visually represent the sale (e.g. a 'tag' icon).
+      // Optionally, add an icon as the start element to make it visually appealing.
+      // Using a generic icon name "tag" to represent a sale. (Ensure the icon exists in your icon set.)
       startElement: {
         type: "Icon",
-        id: "tag",
+        id: "tag", // icon name in kebab-case without the prefix
         size: 16,
         color: "blue"
-      },
-      // An end icon to indicate time information.
-      endElement: {
-        type: "Icon",
-        id: "clock",
-        size: 16,
-        color: "gray"
       }
     };
 
-    // Card media: if there is at least one thumbnail image, display it.
-    // Otherwise, skip the media component.
+    // Build a card media if a thumbnail is available.
     let cardMedia: IAutoView.IAutoViewCardMediaProps | undefined = undefined;
     if (sale.content.thumbnails && sale.content.thumbnails.length > 0) {
-      cardMedia = {
-        type: "CardMedia",
-        src: sale.content.thumbnails[0].url
-      };
+      // Use the first available thumbnail.
+      const thumbnail = sale.content.thumbnails[0];
+      if (thumbnail.url) {
+        cardMedia = {
+          type: "CardMedia",
+          src: thumbnail.url
+        };
+      }
     }
 
-    // Card content: display details about the seller and price range using markdown.
+    // Create markdown content for the card body. 
+    // Use markdown to present details (price range, seller, tags, etc.) in a human-friendly format.
+    const markdownContentLines: string[] = [];
+    markdownContentLines.push(`**Seller:** ${sale.seller.member.nickname}`);
+    markdownContentLines.push(`**Price Range:** Nominal: ${sale.price_range.lowest.nominal}, Real: ${sale.price_range.lowest.real} - ${sale.price_range.highest.real}`);
+    if (sale.tags && sale.tags.length > 0) {
+      markdownContentLines.push(`**Tags:** ${sale.tags.join(", ")}`);
+    }
+    // Additional details can be added here as needed.
+    
+    const cardMarkdown: IAutoView.IAutoViewMarkdownProps = {
+      type: "Markdown",
+      content: markdownContentLines.join("\n\n")
+    };
+
+    // Compose card content with the markdown component.
     const cardContent: IAutoView.IAutoViewCardContentProps = {
       type: "CardContent",
-      childrenProps: {
-        type: "Markdown",
-        content: `**Seller:** ${sale.seller.member.nickname}\n\n**Price Range:** Nominal: ${sale.price_range.lowest.nominal} / Real: ${sale.price_range.lowest.real}`
-      }
+      childrenProps: cardMarkdown
     };
 
-    // Card footer: display creation time using markdown.
-    const cardFooter: IAutoView.IAutoViewCardFooterProps = {
-      type: "CardFooter",
-      childrenProps: {
-        type: "Markdown",
-        content: `Created at: ${sale.created_at}`
-      }
-    };
-
-    // Compose the vertical card using the allowed child components.
-    // Filter out any undefined components (for example, if cardMedia is not available).
-    const childrenComponents: (IAutoView.IAutoViewCardHeaderProps | IAutoView.IAutoViewCardMediaProps | IAutoView.IAutoViewCardContentProps | IAutoView.IAutoViewCardFooterProps)[] = 
-      [cardHeader, cardMedia, cardContent, cardFooter].filter((comp): comp is Exclude<typeof comp, undefined> => comp !== undefined);
+    // Combine header, media (if available) and content into a vertical card.
+    // The vertical card's childrenProps can be an array of components.
+    const cardChildren: (IAutoView.IAutoViewCardHeaderProps | IAutoView.IAutoViewCardMediaProps | IAutoView.IAutoViewCardContentProps)[] = [cardHeader];
+    if (cardMedia) {
+      cardChildren.push(cardMedia);
+    }
+    cardChildren.push(cardContent);
 
     return {
       type: "VerticalCard",
-      childrenProps: childrenComponents
-    } as IAutoView.IAutoViewVerticalCardProps;
+      childrenProps: cardChildren
+    };
   });
 
-  // If there are no sale records, we return a simple markdown component to notify the user. 
-  // This fallback still uses visual markdown rather than plain text.
-  if (verticalCards.length === 0) {
-    return {
-      type: "Markdown",
-      content: "### No sales available.\nPlease check back later."
-    } as IAutoView.IAutoViewMarkdownProps;
-  }
-
-  // Compose the final carousel component according to the extra instruction "use carousel layout for each item".
+  // Use a carousel layout to display each sale vertical card.
+  // The carousel layout should be responsive and engaging on both desktop and mobile screens.
   const carousel: IAutoView.IAutoViewCarouselProps = {
     type: "Carousel",
     autoPlay: true,
-    interval: 30, // Recommended value (between 20 and 60)
     infinite: true,
-    gutter: 10,
-    effect: "slide",
+    // Recommended interval value between 20 and 60 (using 40 as mid value)
+    interval: 40,
     navControls: true,
     indicators: true,
-    // Place the vertical cards into the carousel.
-    childrenProps: verticalCards
+    // Set some gutter spacing if needed; here we set 10 pixels as an example.
+    gutter: 10,
+    effect: "slide",
+    childrenProps: cards
   };
 
   return carousel;

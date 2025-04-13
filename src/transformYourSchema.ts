@@ -50,76 +50,48 @@ export function transformYourSchema($input: IAutoViewTransformerInputType): IAut
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // The function transforms the input schema data into a compound UI element (a vertical card)
-  // which aggregates and visualizes the member's info using visual components such as avatar, image, markdown, and button
-  // We use a vertical card to structure the data in a responsive and engaging visual layout.
+  // Create an avatar component to visually represent the member.
+  // It uses the member's thumbnail picture and name.
+  const avatar: IAutoView.IAutoViewAvatarProps = {
+    type: "Avatar",
+    src: input.thumbnail,
+    name: input.name,
+    // Choosing a default variant and size for visual consistency.
+    variant: "primary",
+    size: 40,
+  };
 
-  // Build a CardHeader that shows the member's name and age.
-  // We include an avatar (using the thumbnail) on the left and an email icon on the right.
+  // Construct the card header.
+  // The header displays the member's name as title and aggregates the age and email into its description.
+  // The avatar is used as the startElement to add a visual cue.
   const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
     type: "CardHeader",
-    // Display the member's name as the title
     title: input.name,
-    // Show the age in a text description
-    description: `Age: ${input.age}`,
-    // Use the avatar component for the start element with the thumbnail image
-    startElement: {
-      type: "Avatar",
-      src: input.thumbnail,
-      name: input.name,
-      variant: "primary",
-      size: 32, // reasonable size for mobile as well as desktop
-    },
-    // For the end element, show an email icon (assuming "mail" is a valid icon id)
-    endElement: {
-      type: "Icon",
-      id: "mail",
-      color: "blue",
-      size: 16,
-    },
+    description: `Age: ${input.age} | Email: ${input.email}`,
+    startElement: avatar,
   };
 
-  // Build a CardMedia component to display the member's thumbnail prominently.
-  const cardMedia: IAutoView.IAutoViewCardMediaProps = {
-    type: "CardMedia",
-    src: input.thumbnail,
+  // Build a markdown component to display the member's introduction.
+  // Using markdown allows for rich text and embedded media if the introduction includes such content.
+  const markdownContent: IAutoView.IAutoViewMarkdownProps = {
+    type: "Markdown",
+    content: input.introduction,
   };
 
-  // Build a CardContent component to display the introduction.
-  // We use the Markdown component to allow for rich text formatting.
+  // Define the card content which will hold the markdown introduction.
+  // This separation helps with responsive design, as content can be styled differently from the header.
   const cardContent: IAutoView.IAutoViewCardContentProps = {
     type: "CardContent",
-    // Since the childrenProps property accepts a variety of presentation components,
-    // we use a Markdown component to render the introduction content.
-    childrenProps: {
-      type: "Markdown",
-      content: input.introduction,
-    },
+    childrenProps: markdownContent,
   };
 
-  // Build a CardFooter component with a button that allows users to contact the member.
-  // The button links to the member's email using the "mailto:" protocol.
-  const cardFooter: IAutoView.IAutoViewCardFooterProps = {
-    type: "CardFooter",
-    childrenProps: {
-      type: "Button",
-      variant: "contained",
-      color: "primary",
-      size: "medium",
-      // The label is a brief text, and href creates a clickable link to send an email.
-      label: "Contact",
-      href: `mailto:${input.email}`,
-    },
-  };
-
-  // Compose the above components into a VerticalCard.
-  // The VerticalCard aggregates the header, media, content, and footer into a single responsive UI component.
+  // Compose a vertical card to aggregate the header and content.
+  // Vertical cards are suitable for mobile devices, ensuring that the UI remains responsive and easy to navigate.
   const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
     type: "VerticalCard",
-    // childrenProps accepts an array of presentation components.
-    childrenProps: [cardHeader, cardMedia, cardContent, cardFooter],
+    childrenProps: [cardHeader, cardContent],
   };
 
-  // Return the complete UI component
+  // Return the complete visualized component.
   return verticalCard;
 }

@@ -1,4 +1,4 @@
-import env from "../env";
+import env from "../env.js";
 
 export const assertApiKey = (): void => {
   const apiKey = env.OPENAI_API_KEY;
