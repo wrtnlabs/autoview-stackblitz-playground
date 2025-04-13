@@ -82,49 +82,6 @@ function Application() {
   return (
     <div className="max-w-[512px] mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-center">AutoView Playground</h1>
-      <Section title="How to use">
-        <hr />
-        <ol className="list-decimal list-inside text-xs mt-4">
-          <li className="py-1">
-            Edit <CodeBlock>src/env.ts</CodeBlock> to set your API key.
-          </li>
-          <li className="py-1">
-            Edit <CodeBlock>src/YourSchema.ts</CodeBlock> to define your own
-            schema (and value).
-          </li>
-          <li className="py-1">
-            Run <CodeBlock>npm run generate</CodeBlock> to generate the
-            component.
-            <ul className="list-disc list-inside text-xs mt-2 pl-3 text-gray-500">
-              <li className="py-0.5">
-                It takes some time (about a minute) to generate the component.
-              </li>
-              <li className="py-0.5">
-                You can see the generated codes in
-                <ul className="list-disc list-inside text-xs mt-2 pl-3 text-gray-500">
-                  <li className="py-0.5">
-                    <CodeBlock>src/transformYourSchema.ts</CodeBlock>
-                  </li>
-                  <li className="py-0.5">
-                    <CodeBlock>src/transformYourPage.ts</CodeBlock>
-                  </li>
-                  <li className="py-0.5">
-                    <CodeBlock>src/transformYourSale.ts</CodeBlock>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </li>
-          <li className="py-1">
-            Run <CodeBlock>npm run start</CodeBlock> to see the component in
-            action.
-          </li>
-        </ol>
-        <p className="text-xs mt-4 text-gray-600">
-          <span className="text-red-500">*</span> All operations are run in your
-          browser only, so no data is sent to the server.
-        </p>
-      </Section>
       <AutoViewComponent />
     </div>
   );
