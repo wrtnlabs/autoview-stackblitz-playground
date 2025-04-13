@@ -1007,75 +1007,78 @@ export function transformSale($input: IAutoViewTransformerInputType): IAutoView.
 
 
 function visualizeData(input: IAutoViewTransformerInputType): IAutoView.IAutoViewComponentProps {
-  // Extract sale information from the input
-  const sale = input;
+  // The idea here is to transform a sale (input) into a visually rich vertical card.
+  // We extract key properties from the sale such as the sale title, description (body),
+  // seller information, thumbnail image (if available), and creation timestamp.
+  //
+  // We compose a VerticalCard that contains a CardHeader with an icon, a CardMedia (if a thumbnail exists),
+  // a CardContent that embeds the sale body using a Markdown component, and a CardFooter that displays the creation time.
+  //
+  // This transformation uses various IAutoView components to ensure the UI is engaging and responsive.
   
-  // Compose the card header component.
-  // We use the sale title and seller member nickname.
-  const cardHeader: IAutoView.IAutoViewCardHeaderProps = {
+  // Build CardHeader component using sale title and seller's nickname.
+  const header: IAutoView.IAutoViewCardHeaderProps = {
     type: "CardHeader",
-    title: sale.content.title,
-    description: "By " + sale.seller.member.nickname,
-    // Using an icon component to visually represent the sale.
+    title: input.content.title,
+    description: `By ${input.seller.member.nickname}`,
+    // Using an icon to visually indicate the seller/user.
     startElement: {
       type: "Icon",
-      id: "shopping-cart",  // using a shopping-cart icon (kebab-case string, no prefix)
-      size: 24,
+      id: "user", // Assumes an icon id "user" exists in the icon library.
+      size: 20,
+      // Optionally, you can include the color if needed.
       color: "blue"
     }
-    // endElement can be added later if needed.
-  };
-  
-  // Compose card media component if there is at least one image file attached.
-  // We choose the first file which is expected to be an image.
-  let cardMedia: IAutoView.IAutoViewCardMediaProps | undefined;
-  if (sale.content.files && sale.content.files.length > 0) {
-    // Use the first file's url. No hard-coded file details.
-    cardMedia = {
-      type: "CardMedia",
-      src: sale.content.files[0].url
-    };
-  }
-  
-  // Compose card content component.
-  // We use a markdown component to display the sale body content.
-  // Even if the source format is not markdown, we use markdown presentation for better readability.
-  const markdownContent: IAutoView.IAutoViewMarkdownProps = {
-    type: "Markdown",
-    content: sale.content.body
-  };
-  
-  const cardContent: IAutoView.IAutoViewCardContentProps = {
-    type: "CardContent",
-    childrenProps: [ markdownContent ]
-  };
-  
-  // Optionally, compose a card footer to show metadata (e.g., last updated time).
-  // We leverage a text component inside the footer for a concise display.
-  const cardFooter: IAutoView.IAutoViewCardFooterProps = {
-    type: "CardFooter",
-    childrenProps: [
-      {
-        type: "Text",
-        // Using a markdown-friendly text value to allow better styling if needed.
-        content: `Updated: ${sale.updated_at}`,
-        variant: "caption",
-        color: "gray"
-      }
-    ]
-  };
-  
-  // Compose the final vertical card.
-  // The vertical card aggregates the header, an optional media component, content, and footer.
-  // This card layout is responsive and uses visual elements (icons, images and markdown)
-  // to present the sale information in an engaging manner.
-  const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
-    type: "VerticalCard",
-    childrenProps: cardMedia 
-      ? [ cardHeader, cardMedia, cardContent, cardFooter ] 
-      : [ cardHeader, cardContent, cardFooter ]
   };
 
-  // Return the composed UI component props.
+  // Optionally create a CardMedia only if there is at least one thumbnail image available.
+  let media: IAutoView.IAutoViewCardMediaProps | null = null;
+  if (input.content.thumbnails && input.content.thumbnails.length > 0) {
+    // Use the first thumbnail image for the card.
+    media = {
+      type: "CardMedia",
+      src: input.content.thumbnails[0].url
+    };
+  }
+
+  // Build CardContent using a Markdown component for displaying the sale description.
+  const content: IAutoView.IAutoViewCardContentProps = {
+    type: "CardContent",
+    // The childrenProps accepts presentation components.
+    // Use a Markdown component so that if the format is "md", we directly show markdown.
+    // Otherwise, wrap plain text in a simple markdown formatting, e.g. bold.
+    childrenProps: {
+      type: "Markdown",
+      content: input.content.format === "md" ? input.content.body : `**${input.content.body}**`
+    }
+  };
+
+  // Optionally, we add a footer with the creation timestamp.
+  const footer: IAutoView.IAutoViewCardFooterProps = {
+    type: "CardFooter",
+    // We use a Text component to display the timestamp in a less intrusive way.
+    childrenProps: {
+      type: "Text",
+      content: `Created at: ${input.created_at}`,
+      variant: "caption",
+      // Using a color from the defined palette to indicate meta information.
+      color: "gray"
+    }
+  };
+
+  // Compose the final VerticalCard.
+  // The childrenProps array will include the header, media (if available), content and footer.
+  // The order is chosen to present a visually understandable UI for users.
+  const verticalCard: IAutoView.IAutoViewVerticalCardProps = {
+    type: "VerticalCard",
+    childrenProps: [
+      header,
+      // Only include the media component if it exists.
+      ...(media ? [media] : []),
+      content,
+      footer
+    ]
+  };
+
   return verticalCard;
 }
