@@ -24,10 +24,10 @@
     "@autoview/compiler": "^7.3.1",
     "@autoview/interface": "^7.3.1",
     "@autoview/ui": "^7.3.1",
-    "@samchon/openapi": "^4.1.0",
+    "@samchon/openapi": "^4.2.0",
     "@samchon/shopping-api": "^0.17.0",
     "dotenv": "^16.4.7",
-    "openai": "^4.95.0",
+    "openai": "^4.95.1",
     "react": "^18",
     "react-dom": "^18",
     "typia": "^9.1.1"
