@@ -40,7 +40,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@mui/material": "^6.4.8",
-    "@ryoppippi/unplugin-typia": "^2.2.0",
+    "@ryoppippi/unplugin-typia": "^2.2.1",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/node": "^22.13.10",
     "@types/react": "^18",
