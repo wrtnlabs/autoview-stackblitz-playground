@@ -24,13 +24,13 @@
     "@autoview/compiler": "^10.0.6",
     "@autoview/interface": "^10.0.6",
     "@autoview/ui": "^10.0.6",
-    "@samchon/openapi": "^4.4.1",
+    "@samchon/openapi": "^4.5.0",
     "@samchon/shopping-api": "^0.17.0",
     "dotenv": "^16.4.7",
     "openai": "^5.8.3",
     "react": "^18",
     "react-dom": "^18",
-    "typia": "^9.4.0"
+    "typia": "^9.5.0"
   },
   "devDependencies": {
     "@emotion/react": "^11.14.0",
