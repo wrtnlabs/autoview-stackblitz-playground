@@ -27,7 +27,7 @@
     "@samchon/openapi": "^4.6.0",
     "@samchon/shopping-api": "^0.17.0",
     "dotenv": "^16.4.7",
-    "openai": "^5.10.2",
+    "openai": "^5.11.0",
     "react": "^18",
     "react-dom": "^18",
     "typia": "^9.6.0"
