@@ -27,10 +27,10 @@
     "@samchon/openapi": "^4.7.1",
     "@samchon/shopping-api": "^0.17.0",
     "dotenv": "^16.4.7",
-    "openai": "^5.12.1",
+    "openai": "^5.12.2",
     "react": "^18",
     "react-dom": "^18",
-    "typia": "^9.7.0"
+    "typia": "^9.7.1"
   },
   "devDependencies": {
     "@emotion/react": "^11.14.0",
