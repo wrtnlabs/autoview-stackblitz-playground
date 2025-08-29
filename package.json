@@ -30,7 +30,7 @@
     "openai": "^5.16.0",
     "react": "^18",
     "react-dom": "^18",
-    "typia": "^9.7.1"
+    "typia": "^9.7.2"
   },
   "devDependencies": {
     "@emotion/react": "^11.14.0",
